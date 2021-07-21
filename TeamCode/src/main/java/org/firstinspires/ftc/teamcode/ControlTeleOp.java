@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.badnewsbots.next.Odometry;
 import com.badnewsbots.ultimategoal.Points;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -59,7 +60,7 @@ public class ControlTeleOp extends LinearOpMode {
         Points points = new Points();
         Drive drive = new Drive();
 
-
+        Odometry.startTracking();
         drive.setMotors(back_left, front_left, back_right, front_right);
 
         String LeftStickInputDirection = "";
@@ -67,7 +68,6 @@ public class ControlTeleOp extends LinearOpMode {
         String RightStickInputDirection = "";
         telemetry.addData("Right Stick Input Direction", RightStickInputDirection);
         telemetry.update();
-
 
         while (opModeIsActive()) {
             float LeftStickY = -1 * gamepad1.left_stick_y;  //To use, press start and A on gamepad
@@ -282,6 +282,7 @@ public class ControlTeleOp extends LinearOpMode {
         runtime.reset();
         //Where stuff happens
         enableGamepadControl();
+        Odometry.stopTracking();
 
         
     }

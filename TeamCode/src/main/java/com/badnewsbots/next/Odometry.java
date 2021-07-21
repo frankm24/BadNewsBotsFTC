@@ -1,5 +1,7 @@
 package com.badnewsbots.next;
 
+import androidx.annotation.NonNull;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -18,29 +20,29 @@ https://renegaderobotics.org/vex-sensors-shaft-encoders/#auton
  */
 public class Odometry {
     //Encoder value multipliers (a good idea used by Wizards.exe #9794, easy way to invert input value)
-    private int leftEncoderMultiplier = 1, rightEncoderMultiplier = 1, horizontalEncoderMultiplier = 1;
+    private static int leftEncoderMultiplier = 1, rightEncoderMultiplier = 1, horizontalEncoderMultiplier = 1;
 
     //Measured constants (NEEDS TO BE MEASURED, PLACEHOLDER)
-    private double inchesPerTick = 0.5, distanceBetweenEncoders = 40;
+    private static double inchesPerTick = 0.5, distanceBetweenEncoders = 40;
 
     //Thread will wait threadSleepDelay milliseconds (currently unused)
-    private int threadSleepDelay = 50; //unit = milliseconds
+    private static int threadSleepDelay = 50; //unit = milliseconds
 
     //Define encoders (DcMotor class has encoder methods)
-    private DcMotor left_encoder, right_encoder, horizontal_encoder;
+    private static DcMotor left_encoder, right_encoder, horizontal_encoder;
 
     //Robot position and orientation values for calculations
-    double globalXPosition = 0, globalYPosition = 0, globalHeading = 0;
-    double leftEncoderPosition = 0, rightEncoderPosition = 0, horizontalEncoderPosition = 0;
-    double prevLeftEncoderPosition = 0, prevRightEncoderPosition = 0, prevHorizontalEncoderPosition = 0;
+    private static double globalXPosition = 0, globalYPosition = 0, globalHeading = 0;
+    private static double leftEncoderPosition = 0, rightEncoderPosition = 0, horizontalEncoderPosition = 0;
+    private static double prevLeftEncoderPosition = 0, prevRightEncoderPosition = 0, prevHorizontalEncoderPosition = 0;
 
-    private boolean tracking = false; //Loop logic (see below)
+    private static boolean tracking = false; //Loop logic (see below)
 
-    public void updatePosition() {
+    public static void updatePosition() {
         //ALL angles and trig functions are in RADIANS NOT deg
-        leftEncoderPosition = left_encoder.getCurrentPosition() * inchesPerTick;
-        rightEncoderPosition = right_encoder.getCurrentPosition() * inchesPerTick;
-        horizontalEncoderPosition = horizontal_encoder.getCurrentPosition() * inchesPerTick;
+        leftEncoderPosition = left_encoder.getCurrentPosition();
+        rightEncoderPosition = right_encoder.getCurrentPosition();
+        horizontalEncoderPosition = horizontal_encoder.getCurrentPosition();
         //Variable names correspond to a visual diagram I drew after researching robotics odometry...
         double dL = leftEncoderPosition - prevLeftEncoderPosition; //All prev (and therefore change) will be zero if initial loop
         double dR = rightEncoderPosition - prevRightEncoderPosition;
@@ -55,11 +57,11 @@ public class Odometry {
         globalYPosition += dY;
         globalHeading += theta;
     }
-    public double[] getPosition() {
-        double[] position = {globalXPosition, globalYPosition, globalHeading};
-        return position;
+
+    public static double[] getPosition() {
+        return new double[] {globalXPosition, globalYPosition, globalHeading};
     }
-    public void startTracking() {
+    public static void startTracking() {
         tracking = true;
         globalXPosition = 0; globalYPosition = 0; globalHeading = 0;
 
@@ -67,13 +69,11 @@ public class Odometry {
             updatePosition();
         }
     }
-
-    public void stopTracking() { tracking = false; }
+    public static void stopTracking() { tracking = false; }
 
     public void setEncoders(DcMotor l, DcMotor r, DcMotor h) {
         left_encoder = l;
         right_encoder = r;
         horizontal_encoder = h;
     }
-
 }
