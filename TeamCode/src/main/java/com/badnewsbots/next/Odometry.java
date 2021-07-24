@@ -69,7 +69,7 @@ public class Odometry {
     }
     public static void stopTracking() { tracking = false; }
 
-    public void setEncoders(DcMotor l, DcMotor r, DcMotor h) {
+    public static void setEncoders(DcMotor l, DcMotor r, DcMotor h) {
         left_encoder = l;
         right_encoder = r;
         horizontal_encoder = h;
