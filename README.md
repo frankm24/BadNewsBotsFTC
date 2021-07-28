@@ -1,5 +1,5 @@
 ## Bad News Bots FTCRobotController
-This repo currently contains an FTCRobotController build with our code from the **Ultimate Goal 2020-2021 Season** as well as, hopefully, our 2021-2022 code. For organizational purposes, we may move the old stuff to a different project.
+This repo currently contains an FTCRobotController build with our code from the **Ultimate Goal 2020-2021 and upcoming 2021-2022 seasons**. For organizational purposes, we may move the old stuff to a different project.
 
 ## What's happening right now.
 Currently (this summer), I (Frank) am working on robot Odometry and general autonomy. 
