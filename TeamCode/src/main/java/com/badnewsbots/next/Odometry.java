@@ -54,6 +54,9 @@ public class Odometry {
         globalXPosition += dX;
         globalYPosition += dY;
         globalHeading += theta;
+        prevLeftEncoderPosition = leftEncoderPosition;
+        prevRightEncoderPosition = rightEncoderPosition;
+        prevHorizontalEncoderPosition = horizontalEncoderPosition;
     }
 
     public static double[] getPosition() {
