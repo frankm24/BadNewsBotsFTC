@@ -1,8 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.badnewsbots.next.Odometry;
 import com.badnewsbots.ultimategoal.Points;
-import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,7 +10,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.badnewsbots.ultimategoal.Drive;
 
-import java.util.jar.Pack200;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 
 @TeleOp(group="Frank's Programs")
@@ -29,6 +28,8 @@ public class ControlTeleOp extends LinearOpMode {
 
     private DcMotorEx flywheel;
     private Servo pusher;
+    private ModernRoboticsI2cRangeSensor rangeSensor;
+
 
     //Encoder settings
     final int FlywheelTargetSpeed = -2400; //ticks per second
@@ -60,7 +61,7 @@ public class ControlTeleOp extends LinearOpMode {
         Points points = new Points();
         Drive drive = new Drive();
 
-        Odometry.startTracking();
+        //Odometry.startTracking();
         drive.setMotors(back_left, front_left, back_right, front_right);
 
         String LeftStickInputDirection = "";
@@ -70,6 +71,7 @@ public class ControlTeleOp extends LinearOpMode {
         telemetry.update();
 
         while (opModeIsActive()) {
+
             float LeftStickY = -1 * gamepad1.left_stick_y;  //To use, press start and A on gamepad
             float LeftStickX = gamepad1.left_stick_x;
             float RightStickY = -1 * gamepad1.right_stick_y;
@@ -245,15 +247,21 @@ public class ControlTeleOp extends LinearOpMode {
                     RightStickInputDirection = "back_right";
                 }
             }
+
+            //rangeSensor.initialize();
+
+            //telemetry.addData("Ultrasonic sensor", rangeSensor.getDistance(DistanceUnit.METER));
+            //telemetry.addData("Encoder position: ", back_left.getCurrentPosition());
             telemetry.addData("Left Stick Input Direction", LeftStickInputDirection);
             telemetry.addData("LeftStickX", LeftStickX);
             telemetry.addData("LeftStickY", LeftStickY);
             telemetry.addData("Right Stick Input Direction", RightStickInputDirection);
             telemetry.addData("RightStickX", RightStickX);
             telemetry.addData("RightStickY", RightStickY);
-            telemetry.addData("Flywheel velocity: ", flywheel.getVelocity());
-            telemetry.addData("Pusher position", pusher.getPosition());
+            //telemetry.addData("Flywheel velocity: ", flywheel.getVelocity());
+            //telemetry.addData("Pusher position", pusher.getPosition());
             telemetry.update();
+
         }
     }
 
@@ -261,28 +269,32 @@ public class ControlTeleOp extends LinearOpMode {
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-
+        
 
         // hardwareMap.get stuff
         back_left = hardwareMap.get(DcMotor.class, "back_left");
         front_left = hardwareMap.get(DcMotor.class, "front_left");
         back_right = hardwareMap.get(DcMotor.class, "back_right");
         front_right = hardwareMap.get(DcMotor.class, "front_right");
-        flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
-        pusher = hardwareMap.get(Servo.class, "pusher");
+        //flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
+        //pusher = hardwareMap.get(Servo.class, "pusher");
+        //rangeSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range_sensor");
 
         // Reverse the motors that runs backwards (LEFT SIDE)
-        back_left.setDirection(DcMotor.Direction.REVERSE);
+        front_right.setDirection(DcMotor.Direction.REVERSE);
         front_left.setDirection(DcMotor.Direction.REVERSE);
 
-        flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        //Odometry.setEncoders(front_left, front_right, back_right);
         // Wait for play button to be pressed
         waitForStart();
         runtime.reset();
         //Where stuff happens
         enableGamepadControl();
-        Odometry.stopTracking();
+       // Odometry.stopTracking();
+
+
 
         
     }

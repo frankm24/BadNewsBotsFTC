@@ -1,7 +1,6 @@
-package com.badnewsbots.next;
+package com.badnewsbots.freightfrenzy;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 /*
 Created by Frank on 7/20/2021.
@@ -23,7 +22,7 @@ public class Odometry {
     //Measured constants (NEEDS TO BE MEASURED, PLACEHOLDER)
     private static double inchesPerTick = 0.5, distanceBetweenEncoders = 40;
 
-    //Thread will wait threadSleepDelay milliseconds (currently unused)
+    //Thread will wait threadSleepDelay milliseconds before next loop (currently unused)
     private static int threadSleepDelay = 50; //unit = milliseconds
 
     //Define encoders (DcMotor class has encoder methods)

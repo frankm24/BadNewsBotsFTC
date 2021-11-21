@@ -1,5 +1,6 @@
 package com.badnewsbots.ultimategoal;
 
+import com.badnewsbots.ultimategoal.Points;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 public class Drive {
@@ -83,14 +84,14 @@ public class Drive {
     }
     public void turnLeft(double power) {
         front_left.setPower(-power);
-        back_left.setPower(-power);
-        front_right.setPower(power);
+        back_left.setPower(power);
+        front_right.setPower(-power);
         back_right.setPower(power);
     }
     public void turnRight(double power) {
         front_left.setPower(power);
-        back_left.setPower(power);
-        front_right.setPower(-power);
+        back_left.setPower(-power);
+        front_right.setPower(power);
         back_right.setPower(-power);
     }
 }
