@@ -26,6 +26,9 @@ public class ControlTeleOp extends LinearOpMode {
     private DcMotor back_right;
     private DcMotor front_right;
 
+    private Servo linear;
+    private Servo claw;
+
     private DcMotorEx flywheel;
     private Servo pusher;
     private ModernRoboticsI2cRangeSensor rangeSensor;
@@ -78,8 +81,13 @@ public class ControlTeleOp extends LinearOpMode {
             float RightStickX = gamepad1.right_stick_x;
             boolean A = gamepad1.a;
             boolean X = gamepad1.x;
+            boolean Y = gamepad1.y;
+            boolean linear_pos = false;
+            boolean claw_pos = false;
+
 
             if (X && XDebounce == false) {
+                /*
                 telemetry.addData("X Detected", true);
                 XDebounce = true;
                 double targetPos = pusher.getPosition() + 0.23;
@@ -90,7 +98,27 @@ public class ControlTeleOp extends LinearOpMode {
                 targetPos = pusher.getPosition() - 0.23;
                 telemetry.addLine("rotating back");
                 telemetry.update();
-                pusher.setPosition(targetPos);
+                pusher.setPosition(targetPos)
+                 */
+                if (linear_pos) {
+                    linear.setPosition(1/3);
+                    linear_pos = true;
+                }
+                else {
+                    linear.setPosition(2/3);
+                    linear_pos = false;
+                }
+
+            }
+            if (Y) {
+                if (claw_pos) {
+                    claw.setPosition(2/3);
+                    claw_pos = true;
+                }
+                else {
+                    claw.setPosition(1 / 3);
+                    claw_pos = false;
+                }
             }
             if (A) {
                 if (RevStatus == false && ADebounce == false) {
@@ -279,6 +307,9 @@ public class ControlTeleOp extends LinearOpMode {
         //flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
         //pusher = hardwareMap.get(Servo.class, "pusher");
         //rangeSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range_sensor");
+
+        linear = hardwareMap.get(Servo.class, "linear");
+        claw = hardwareMap.get(Servo.class, "claw");
 
         // Reverse the motors that runs backwards (LEFT SIDE)
         front_right.setDirection(DcMotor.Direction.REVERSE);
