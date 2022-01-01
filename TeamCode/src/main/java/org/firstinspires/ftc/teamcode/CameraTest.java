@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.os.Environment;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -12,6 +14,7 @@ import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraBase;
 import org.openftc.easyopencv.OpenCvCameraException;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
@@ -19,18 +22,22 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvViewport;
 import org.opencv.core.Core;
+import org.openftc.easyopencv.OpenCvWebcam;
+
+import java.util.Arrays;
+
 @TeleOp(group = "Testing")
 public class CameraTest extends LinearOpMode {
 
     public void runOpMode() {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
-        OpenCvCamera camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
+        OpenCvWebcam camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
         camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED);
         camera.showFpsMeterOnViewport(true);
         TestPipeline pipeline = new TestPipeline();
         camera.setPipeline(pipeline);
-
+        camera.setMillisecondsPermissionTimeout(3000); //Give plenty of time for the
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
             @Override
@@ -44,18 +51,21 @@ public class CameraTest extends LinearOpMode {
             @Override
             public void onError(int errorCode)
             {
-                throw new OpenCvCameraException("Could not open camera device.");
+                throw new OpenCvCameraException("Could not open camera device. Error code: " + errorCode) ;
                 /*
                  * This will be called if the camera could not be opened
                  */
             }
         });
-        waitForStart();
-        while (opModeIsActive()) {
+        while (!opModeIsActive() && !isStopRequested()) {
+            int[] values = pipeline.getValues();
             telemetry.addData("Element Position", pipeline.getElementPosition());
+            telemetry.addData("Values:", Arrays.toString(values));
+            telemetry.addData("FPS: ", camera.getFps());
             telemetry.update();
-            sleep(50);
+            sleep(100);
         }
+        camera.stopStreaming();
     }
 
     public static class TestPipeline extends OpenCvPipeline {
@@ -67,25 +77,28 @@ public class CameraTest extends LinearOpMode {
             NONE
         }
         //Configure the points for the rectangle areas for detecting saturation values
-        Point Left1 = new Point(100, 100);
-        Point Left2 = new Point(250, 250);
+        Point Left1 = new Point(100, 400);
+        Point Left2 = new Point(300, 600);
         Rect LeftRect = new Rect(Left1, Left2);
 
-        Point Center1 = new Point(300, 300);
-        Point Center2 = new Point(450, 450);
+        Point Center1 = new Point(450, 400);
+        Point Center2 = new Point(650, 600);
         Rect CenterRect = new Rect(Center1, Center2);
 
-        Point Right1 = new Point(450, 450);
-        Point Right2 = new Point(600, 600);
+        Point Right1 = new Point(1000, 400);
+        Point Right2 = new Point(1200, 600);
         Rect RightRect = new Rect(Right1, Right2);
-
 
         Scalar draw_color = new Scalar(255, 0, 0);
 
-        Scalar min = new Scalar(0, 0, 0);
-        Scalar max = new Scalar(255, 255, 255);
+        boolean returnResult = true;
+
+        Scalar min = new Scalar(45, 30, 50);
+        Scalar max = new Scalar(70, 255, 255);
 
         // Notice this is declared as an instance variable (and re-used), not a local variable
+        Mat hsvImage;
+        Mat filteredImage;
         Mat LeftMat;
         Mat CenterMat;
         Mat RightMat;
@@ -98,23 +111,32 @@ public class CameraTest extends LinearOpMode {
 
         @Override
         public void init(Mat firstFrame) {
-            LeftMat = firstFrame.submat(LeftRect);
-            CenterMat = firstFrame.submat(CenterRect);
-            RightMat = firstFrame.submat(RightRect);
-            //Imgcodecs.imwrite("/root/image", firstFrame);
+            hsvImage = new Mat();
+            filteredImage = new Mat();
+            Imgproc.cvtColor(firstFrame, hsvImage, Imgproc.COLOR_RGB2HSV);
+            Core.inRange(hsvImage, min, max, filteredImage);
+            LeftMat = filteredImage.submat(LeftRect);
+            CenterMat = filteredImage.submat(CenterRect);
+            RightMat = filteredImage.submat(RightRect);
+            String fileName = Environment.getExternalStorageDirectory() + "/Pictures/image.png";
+            Imgcodecs.imwrite(fileName, firstFrame);
         }
 
         @Override
         public Mat processFrame(Mat input) {
-            leftAvg = (int) Core.mean(LeftMat).val[1];
-            centerAvg = (int) Core.mean(CenterMat).val[1];
-            rightAvg = (int) Core.mean(RightMat).val[1];
+            Imgproc.cvtColor(input, hsvImage, Imgproc.COLOR_RGB2HSV);
+            Core.inRange(hsvImage, min, max, filteredImage);
+            leftAvg = (int) Core.mean(LeftMat).val[0];
+            centerAvg = (int) Core.mean(CenterMat).val[0];
+            rightAvg = (int) Core.mean(RightMat).val[0];
 
-            int avg = Math.max(leftAvg, Math.max(centerAvg, rightAvg));
+            //int avg = Math.max(leftAvg, Math.max(centerAvg, rightAvg));
 
-            if (avg == leftAvg) {
+            int mostGreen = Math.max(leftAvg, Math.max(centerAvg, rightAvg));
+
+            if (mostGreen == leftAvg) {
                position = ElementPosition.LEFT;
-            } else if (avg == centerAvg) {
+            } else if (mostGreen == centerAvg) {
                position = ElementPosition.CENTER;
             } else {
                position = ElementPosition.RIGHT;
@@ -122,13 +144,20 @@ public class CameraTest extends LinearOpMode {
 
             //both methods need to be tried, range is probably better
             //Imgproc.adaptiveThreshold(input, processed, Imgproc.ADAPTIVE_THRESH_MEAN_C,);
-            Imgproc.rectangle(input, LeftRect, draw_color, 10);
-            Imgproc.rectangle(input, CenterRect, draw_color, 10);
-            Imgproc.rectangle(input, RightRect, draw_color, 10);
-            return input;
+            Imgproc.rectangle(filteredImage, LeftRect, draw_color, 10);
+            Imgproc.rectangle(filteredImage, CenterRect, draw_color, 10);
+            Imgproc.rectangle(filteredImage, RightRect, draw_color, 10);
+            if (returnResult == true) {
+                return filteredImage;
+            } else {
+                return input;
+            }
         }
         public ElementPosition getElementPosition() {
             return position;
+        }
+        public int[] getValues() {
+            return new int[] {leftAvg, centerAvg, rightAvg};
         }
     }
 }
