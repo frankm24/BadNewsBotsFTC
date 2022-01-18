@@ -9,6 +9,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.StandardTrackingWheelLocalizer;
 
+import java.util.Set;
+
 @TeleOp(group = "Testing")
 public class EncoderTest extends LinearOpMode {
 
@@ -17,19 +19,19 @@ public class EncoderTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        /*
+
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         Pose2d startPose = new Pose2d(0,0,0);
         drive.setPoseEstimate(startPose);
-        */
+
 
         // Insert whatever initialization your own code does
 
         // This is assuming you're using StandardTrackingWheelLocalizer.java
-        // Switch this class to something else (Like TwoWheeTrackingLocalizer.java) if your configuration is different
+        // Switch this class to something else (Like TwoWheelTrackingLocalizer.java) if your configuration is different
         StandardTrackingWheelLocalizer myLocalizer = new StandardTrackingWheelLocalizer(hardwareMap);
 
-        // Set your initial pose to x: 10, y: 10, facing 90 degrees
+        //Set your initial pose to x: 10, y: 10, facing 90 degrees
         myLocalizer.setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
 
         waitForStart();

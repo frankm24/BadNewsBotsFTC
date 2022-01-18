@@ -10,12 +10,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.badnewsbots.ultimategoal.Drive;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
-
 @TeleOp(group="Frank's Programs")
 public class ControlTeleOp extends LinearOpMode {
-
 
     //Elapsed time
     private ElapsedTime runtime = new ElapsedTime();
@@ -26,30 +22,31 @@ public class ControlTeleOp extends LinearOpMode {
     private DcMotor back_right;
     private DcMotor front_right;
 
-    private Servo linear;
-    private Servo claw;
+    private Servo arm;
 
-    private DcMotorEx flywheel;
+    private DcMotorEx intake;
     private Servo pusher;
     private ModernRoboticsI2cRangeSensor rangeSensor;
 
 
     //Encoder settings
-    final int FlywheelTargetSpeed = -2400; //ticks per second
+    final int FlywheelTargetSpeed = 1500; //ticks per second
 
     //Button code
+    double ADebounceTimer = 0.3; //seconds
+    double XDebounceTimer = 0.3;
+
     boolean RevStatus = false;
+    boolean servoUp = false;
     boolean ADebounce = false;
     double ADebounceTime = 0;
     boolean XDebounce = false;
-    double ADebounceTimer = 0.5;
-    double XDebounceTimer = 2;
     double XDebounceTime = 0;
 
     //Events code
 
     //Maths lol
-    static final double sqrt2over2 = (Math.sqrt(2)) / 2;
+    //static final double sqrt2over2 = (Math.sqrt(2)) / 2;
 
     public void smartWait(double time) {
         double t = getRuntime();
@@ -61,11 +58,10 @@ public class ControlTeleOp extends LinearOpMode {
     }
 
     public void enableGamepadControl() {
-        Points points = new Points();
-        Drive drive = new Drive();
+        //Points points = new Points();
+        //Drive drive = new Drive();
 
-        //Odometry.startTracking();
-        drive.setMotors(back_left, front_left, back_right, front_right);
+        //drive.setMotors(back_left, front_left, back_right, front_right);
 
         String LeftStickInputDirection = "";
         telemetry.addData("Left Stick Input Direction", LeftStickInputDirection);
@@ -73,7 +69,8 @@ public class ControlTeleOp extends LinearOpMode {
         telemetry.addData("Right Stick Input Direction", RightStickInputDirection);
         telemetry.update();
 
-        while (opModeIsActive()) {
+        servoUp = false;
+        while (opModeIsActive() && !isStopRequested()) {
 
             float LeftStickY = -1 * gamepad1.left_stick_y;  //To use, press start and A on gamepad
             float LeftStickX = gamepad1.left_stick_x;
@@ -81,69 +78,52 @@ public class ControlTeleOp extends LinearOpMode {
             float RightStickX = gamepad1.right_stick_x;
             boolean A = gamepad1.a;
             boolean X = gamepad1.x;
-            boolean Y = gamepad1.y;
-            boolean linear_pos = false;
-            boolean claw_pos = false;
 
-
-            if (X && XDebounce == false) {
-                /*
-                telemetry.addData("X Detected", true);
+            if (X && !XDebounce) {
+                XDebounceTime = getRuntime();
                 XDebounce = true;
-                double targetPos = pusher.getPosition() + 0.23;
-                pusher.setPosition(targetPos);
-                telemetry.addLine("Position set");
-                telemetry.update();
-                smartWait(2);
-                targetPos = pusher.getPosition() - 0.23;
-                telemetry.addLine("rotating back");
-                telemetry.update();
-                pusher.setPosition(targetPos)
-                 */
-                if (linear_pos) {
-                    linear.setPosition(1/3);
-                    linear_pos = true;
-                }
-                else {
-                    linear.setPosition(2/3);
-                    linear_pos = false;
-                }
-
-            }
-            if (Y) {
-                if (claw_pos) {
-                    claw.setPosition(2/3);
-                    claw_pos = true;
-                }
-                else {
-                    claw.setPosition(1 / 3);
-                    claw_pos = false;
+                if (servoUp) {
+                    telemetry.addLine("X detected");
+                    telemetry.update();
+                    arm.setPosition(0);
+                    servoUp = false;
+                } else {
+                    arm.setPosition(0.4);
+                    servoUp = true;
                 }
             }
-            if (A) {
-                if (RevStatus == false && ADebounce == false) {
-                    flywheel.setVelocity(FlywheelTargetSpeed);
+            if (A && !ADebounce) {
+                telemetry.addLine("A detected");
+                telemetry.update();
+                ADebounceTime = getRuntime();
+                ADebounce = true;
+                if (RevStatus == false) {
+                    intake.setVelocity(FlywheelTargetSpeed);
                     RevStatus = true;
-                    ADebounce = true;
-                    ADebounceTime = getRuntime();
                 }
-                else if (RevStatus == true && ADebounce == false) {
-                    flywheel.setVelocity(0);
+                else if (RevStatus == true ) {
+                    intake.setVelocity(0);
                     RevStatus = false;
-                    ADebounce = true;
-                    ADebounceTime = getRuntime();
                 }
             }
-            else {
-                telemetry.addData("X Detected", false);
-            }
+
             if (getRuntime() - ADebounceTime >= ADebounceTimer) {
                 ADebounce = false;
             }
             if (getRuntime() - XDebounceTime >= XDebounceTimer) {
                 XDebounce = false;
             }
-
+            double denominator = Math.max(Math.abs(LeftStickY) + Math.abs(LeftStickX) + Math.abs(RightStickX), 1);
+            double front_leftPower = (LeftStickY + LeftStickX + RightStickX) / denominator;
+            double back_leftPower = (LeftStickY - LeftStickX + RightStickX) / denominator;
+            double front_rightPower = (LeftStickY - LeftStickX - RightStickX) / denominator;
+            double back_rightPower = (LeftStickY + LeftStickX - RightStickX) / denominator;
+            front_left.setPower(front_leftPower);
+            back_left.setPower(back_leftPower);
+            front_right.setPower(front_rightPower);
+            back_right.setPower(back_rightPower);
+            //Old code in there... you don't want to look...
+            /*
             if (LeftStickX == 0 && LeftStickY == 0) {
                 drive.setMotorsToZero();
                 LeftStickInputDirection = "none";
@@ -163,7 +143,6 @@ public class ControlTeleOp extends LinearOpMode {
                     drive.forwardRight(drive.getPowerFromMagnitude(LeftStickX, LeftStickY));
                     LeftStickInputDirection = "forward_right";
                 }
-
             }
             else if (LeftStickX < 0 && LeftStickY >= 0) { //Quadrant II
                 if (points.distanceFormula(LeftStickX, LeftStickY, 0, 1) < //Closer to fd than midp
@@ -275,19 +254,14 @@ public class ControlTeleOp extends LinearOpMode {
                     RightStickInputDirection = "back_right";
                 }
             }
+            */
 
-            //rangeSensor.initialize();
-
-            //telemetry.addData("Ultrasonic sensor", rangeSensor.getDistance(DistanceUnit.METER));
-            //telemetry.addData("Encoder position: ", back_left.getCurrentPosition());
             telemetry.addData("Left Stick Input Direction", LeftStickInputDirection);
             telemetry.addData("LeftStickX", LeftStickX);
             telemetry.addData("LeftStickY", LeftStickY);
             telemetry.addData("Right Stick Input Direction", RightStickInputDirection);
             telemetry.addData("RightStickX", RightStickX);
             telemetry.addData("RightStickY", RightStickY);
-            //telemetry.addData("Flywheel velocity: ", flywheel.getVelocity());
-            //telemetry.addData("Pusher position", pusher.getPosition());
             telemetry.update();
 
         }
@@ -298,22 +272,17 @@ public class ControlTeleOp extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         
-
         // hardwareMap.get stuff
         back_left = hardwareMap.get(DcMotor.class, "back_left");
         front_left = hardwareMap.get(DcMotor.class, "front_left");
         back_right = hardwareMap.get(DcMotor.class, "back_right");
         front_right = hardwareMap.get(DcMotor.class, "front_right");
-        //flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
-        //pusher = hardwareMap.get(Servo.class, "pusher");
-        //rangeSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range_sensor");
-
-        linear = hardwareMap.get(Servo.class, "linear");
-        claw = hardwareMap.get(Servo.class, "claw");
+        intake = hardwareMap.get(DcMotorEx.class, "intake");
+        arm = hardwareMap.get(Servo.class, "arm");
 
         // Reverse the motors that runs backwards (LEFT SIDE)
-        front_right.setDirection(DcMotor.Direction.REVERSE);
         front_left.setDirection(DcMotor.Direction.REVERSE);
+        back_left.setDirection(DcMotor.Direction.REVERSE);
 
         //flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -324,10 +293,6 @@ public class ControlTeleOp extends LinearOpMode {
         //Where stuff happens
         enableGamepadControl();
        // Odometry.stopTracking();
-
-
-
-        
     }
 }
 

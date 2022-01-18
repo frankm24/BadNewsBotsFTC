@@ -12,7 +12,7 @@ For more information, visit modernroboticsedu.com.
 Support is available by emailing support@modernroboticsinc.com.
 */
 
-package org.firstinspires.ftc.teamcode;
+package com.badnewsbots;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;

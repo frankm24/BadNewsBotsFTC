@@ -19,15 +19,9 @@ public class Drive {
     public double getPowerFromMagnitude(double stickInputX, double stickInputY) {
         Points points = new Points();
         double magnitude = points.distanceFormula(0, 0, stickInputX, stickInputY);
-        return magnitude;
+        return magnitude / 1.2;
     }
-    public void driveForward(double power, double time) {
-        back_left.setPower(power);
-        front_left.setPower(power);
-        front_right.setPower(power);
-        back_right.setPower(power);
-        setMotorsToZero();
-    }
+
     public void setMotorsToZero() {
         back_left.setPower(0);
         front_left.setPower(0);
@@ -84,14 +78,14 @@ public class Drive {
     }
     public void turnLeft(double power) {
         front_left.setPower(-power);
-        back_left.setPower(power);
-        front_right.setPower(-power);
+        back_left.setPower(-power);
+        front_right.setPower(power);
         back_right.setPower(power);
     }
     public void turnRight(double power) {
         front_left.setPower(power);
-        back_left.setPower(-power);
-        front_right.setPower(power);
+        back_left.setPower(power);
+        front_right.setPower(-power);
         back_right.setPower(-power);
     }
 }

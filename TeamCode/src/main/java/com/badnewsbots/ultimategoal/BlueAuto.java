@@ -1,26 +1,34 @@
-package org.firstinspires.ftc.teamcode;
+package com.badnewsbots.ultimategoal;
 
 import com.badnewsbots.ultimategoal.Drive;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
-import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.List;
 
-@Autonomous(name = "Blue Autonomous 2")
+@Autonomous(name = "Blue Autonomous")
 
-public class BlueAuto2 extends LinearOpMode {
+public class BlueAuto extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
@@ -128,59 +136,46 @@ public class BlueAuto2 extends LinearOpMode {
 
             imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
-            telemetry.addData("Position: ", imu.getPosition());
-            telemetry.addData("Acceleration", imu.getAcceleration());
-            telemetry.addData("Color Sensor Blue: ", colorSensor.blue());
-            telemetry.addData("Color Sensor Red:", colorSensor.red());
-            telemetry.addData("Angular Orientation", imu.getAngularOrientation());
-            telemetry.addData("Position:", imu.getPosition());
-            telemetry.update();
-
-            //Blue value Grey = 3/4, blue = 7+, blue is low
-            //Red value Grey = 3/4, red = 20+, blue is low
-            //White line if blue and red are both 20+
+                //Blue value Grey = 3/4, blue = 7+, blue is low
+                //Red value Grey = 3/4, red = 20+, blue is low
+                //White line if blue and red are both 20+
             byte BlueLineHits = 0;
             if (targetZone == 'A') {
                 while (BlueLineHits < 1) {
                     drive.backward(10);
-                    if ((colorSensor.blue() >= 7) && (colorSensor.red() < 5)) {
+                    if ((colorSensor.blue() >= 14) && (colorSensor.red() < 5)) {
                         BlueLineHits += 1;
-                        smartWait(0.5);
+                        smartWait(0.2);
                     }
                 }
-                drive.setMotorsToZero();
                 drive.forward(10);
-                smartWait(1);
+                smartWait(2);
                 drive.setMotorsToZero();
-                drive.right(10);
-                smartWait(3);
             }
             if (targetZone == 'B') {
                 while (BlueLineHits < 1) {
                     drive.backward(10);
-                    if ((colorSensor.blue() >= 7) && (colorSensor.red() < 5)) {
+                    if ((colorSensor.blue() >= 14) && (colorSensor.red() < 5)) {
                         BlueLineHits += 1;
-                        smartWait(0.5);
+                        smartWait(0.2);
                     }
                 }
                 drive.setMotorsToZero();
-                drive.backward(10);
-                smartWait(1);
+                drive.backLeft(10);
+                smartWait(.5);
                 drive.setMotorsToZero();
             }
             if (targetZone == 'C') {
-                while (BlueLineHits < 2) {
+                while (BlueLineHits < 3) {
                     drive.backward(10);
-                    if ((colorSensor.blue() >= 7) && (colorSensor.red() < 5)) {
+                    if ((colorSensor.blue() >= 14) && (colorSensor.red() < 5)) {
                         BlueLineHits += 1;
-                        smartWait(0.5);
+                        smartWait(0.2);
                     }
                 }
                 drive.setMotorsToZero();
-                drive.backward(10);
-                smartWait(1);
-                drive.right(10);
-                smartWait(3);
+                drive.forward(10);
+                smartWait(2);
                 drive.setMotorsToZero();
             }
         }
