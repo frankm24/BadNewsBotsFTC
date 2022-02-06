@@ -1,16 +1,18 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.badnewsbots.ultimategoal.Points;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.badnewsbots.ultimategoal.Drive;
 
-@TeleOp(group="Frank's Programs")
+import java.util.List;
+
+@TeleOp
 public class ControlTeleOp extends LinearOpMode {
 
     //Elapsed time
@@ -21,27 +23,36 @@ public class ControlTeleOp extends LinearOpMode {
     private DcMotor front_left;
     private DcMotor back_right;
     private DcMotor front_right;
+    private DcMotor[] motors = {back_left, front_left, front_right, back_right};
 
     private Servo arm;
+    private Servo door;
 
     private DcMotorEx intake;
+
+    private BNO055IMU imu;
     private Servo pusher;
-    private ModernRoboticsI2cRangeSensor rangeSensor;
 
 
-    //Encoder settings
+    //settings
     final int FlywheelTargetSpeed = 1500; //ticks per second
+    float SpeedMultiplier = 0.5f; //scale movement speed
 
     //Button code
     double ADebounceTimer = 0.3; //seconds
     double XDebounceTimer = 0.3;
+    double YDebounceTimer = 0.3;
 
     boolean RevStatus = false;
+    boolean doorClosed = false;
     boolean servoUp = false;
+    boolean isArmInMotion = false;
     boolean ADebounce = false;
     double ADebounceTime = 0;
     boolean XDebounce = false;
     double XDebounceTime = 0;
+    boolean YDebounce = false;
+    double YDebounceTime = 0;
 
     //Events code
 
@@ -60,7 +71,6 @@ public class ControlTeleOp extends LinearOpMode {
     public void enableGamepadControl() {
         //Points points = new Points();
         //Drive drive = new Drive();
-
         //drive.setMotors(back_left, front_left, back_right, front_right);
 
         String LeftStickInputDirection = "";
@@ -69,49 +79,96 @@ public class ControlTeleOp extends LinearOpMode {
         telemetry.addData("Right Stick Input Direction", RightStickInputDirection);
         telemetry.update();
 
-        servoUp = false;
         while (opModeIsActive() && !isStopRequested()) {
+            /*
+            wip version for devin *sigh*:
+            if (X && !isArmInMotion) {
+                isArmInMotion = true;
+                telemetry.addLine("Arm moving.");
+                door.close();
+                arm.setPosition(0.5);
+                smartWait(<Time it takes for servo to rise>)
+                door.open();
+                smartWait(3000) or waitForButtonPress();
+                arm.setPosition(-0.06);
+                smartWait(<Time it takes for servo to rise>);
+                isArmInMotion = false;
+            }
 
-            float LeftStickY = -1 * gamepad1.left_stick_y;  //To use, press start and A on gamepad
-            float LeftStickX = gamepad1.left_stick_x;
-            float RightStickY = -1 * gamepad1.right_stick_y;
-            float RightStickX = gamepad1.right_stick_x;
+             */
+
+            float LeftStickY = -1 * gamepad1.left_stick_y * SpeedMultiplier;  //To use, press start and A on gamepad
+            float LeftStickX = gamepad1.left_stick_x * SpeedMultiplier;
+            float RightStickY = -1 * gamepad1.right_stick_y * SpeedMultiplier;
+            float RightStickX = gamepad1.right_stick_x * SpeedMultiplier;
             boolean A = gamepad1.a;
             boolean X = gamepad1.x;
+            boolean Y = gamepad1.y;
 
+            if (Y && !YDebounce) {
+                YDebounce = true;
+                arm.setPosition(0.5);
+                sleep(3000);
+                arm.setPosition(-0.35);
+                YDebounce = false;
+            }
+            if (X && !XDebounce) {
+                XDebounce = true;
+                door.setPosition(0);
+                sleep(100);
+                arm.setPosition(0.78);
+                sleep(3000);
+                door.setPosition(0.65);
+                sleep(1000);
+                arm.setPosition(0);
+                XDebounce = false;
+            }
+            if (A && !ADebounce) {
+                telemetry.addLine("A detected");
+                ADebounceTime = getRuntime();
+                ADebounce = true;
+                if (!RevStatus) {
+                    intake.setVelocity(FlywheelTargetSpeed);
+                    RevStatus = true;
+                } else if (RevStatus) {
+                    intake.setVelocity(0);
+                    RevStatus = false;
+                }
+            }
+            /*
             if (X && !XDebounce) {
                 XDebounceTime = getRuntime();
                 XDebounce = true;
                 if (servoUp) {
                     telemetry.addLine("X detected");
-                    telemetry.update();
-                    arm.setPosition(0);
+                    arm.setPosition(-0.06);
                     servoUp = false;
                 } else {
-                    arm.setPosition(0.4);
+                    arm.setPosition(0.5);
                     servoUp = true;
                 }
             }
-            if (A && !ADebounce) {
-                telemetry.addLine("A detected");
-                telemetry.update();
-                ADebounceTime = getRuntime();
-                ADebounce = true;
-                if (RevStatus == false) {
-                    intake.setVelocity(FlywheelTargetSpeed);
-                    RevStatus = true;
+            if (Y && !YDebounce) {
+                telemetry.addLine("Y detected");
+                YDebounceTime = getRuntime();
+                YDebounce = true;
+                if (!doorClosed) {
+                    door.setPosition(0.65);
+                    doorClosed = true;
+                } else if (doorClosed) {
+                    door.setPosition(1);
+                    doorClosed = false;
                 }
-                else if (RevStatus == true ) {
-                    intake.setVelocity(0);
-                    RevStatus = false;
-                }
-            }
-
-            if (getRuntime() - ADebounceTime >= ADebounceTimer) {
-                ADebounce = false;
             }
             if (getRuntime() - XDebounceTime >= XDebounceTimer) {
                 XDebounce = false;
+            }
+            if (getRuntime() - YDebounceTime >= YDebounceTimer) {
+                YDebounce = false;
+            }
+             */
+            if (getRuntime() - ADebounceTime >= ADebounceTimer) {
+                ADebounce = false;
             }
             double denominator = Math.max(Math.abs(LeftStickY) + Math.abs(LeftStickX) + Math.abs(RightStickX), 1);
             double front_leftPower = (LeftStickY + LeftStickX + RightStickX) / denominator;
@@ -255,39 +312,46 @@ public class ControlTeleOp extends LinearOpMode {
                 }
             }
             */
-
-            telemetry.addData("Left Stick Input Direction", LeftStickInputDirection);
-            telemetry.addData("LeftStickX", LeftStickX);
-            telemetry.addData("LeftStickY", LeftStickY);
-            telemetry.addData("Right Stick Input Direction", RightStickInputDirection);
-            telemetry.addData("RightStickX", RightStickX);
-            telemetry.addData("RightStickY", RightStickY);
+            telemetry.addData("IMU Data", imu.getAngularOrientation());
             telemetry.update();
-
         }
     }
 
     @Override
     public void runOpMode() {
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
-        
         // hardwareMap.get stuff
         back_left = hardwareMap.get(DcMotor.class, "back_left");
         front_left = hardwareMap.get(DcMotor.class, "front_left");
         back_right = hardwareMap.get(DcMotor.class, "back_right");
         front_right = hardwareMap.get(DcMotor.class, "front_right");
-        intake = hardwareMap.get(DcMotorEx.class, "intake");
+        try {
+            intake = hardwareMap.get(DcMotorEx.class, "intake");
+        } catch (IllegalArgumentException e) {
+            telemetry.addLine("expansion hub not working");
+            telemetry.update();
+        }
         arm = hardwareMap.get(Servo.class, "arm");
+        door = hardwareMap.get(Servo.class, "door");
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
 
         // Reverse the motors that runs backwards (LEFT SIDE)
         front_left.setDirection(DcMotor.Direction.REVERSE);
         back_left.setDirection(DcMotor.Direction.REVERSE);
 
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+
+        parameters.mode                = BNO055IMU.SensorMode.IMU;
+        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.loggingEnabled      = false;
+        imu.initialize(parameters);
+
         //flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         //Odometry.setEncoders(front_left, front_right, back_right);
         // Wait for play button to be pressed
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
         waitForStart();
         runtime.reset();
         //Where stuff happens

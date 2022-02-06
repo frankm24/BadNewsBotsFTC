@@ -70,7 +70,7 @@ public class CameraTest extends LinearOpMode {
 
     public static class TestPipeline extends OpenCvPipeline {
 
-        public enum ElementPosition {
+        enum ElementPosition {
             LEFT,
             CENTER,
             RIGHT,
@@ -121,7 +121,6 @@ public class CameraTest extends LinearOpMode {
             String fileName = Environment.getExternalStorageDirectory() + "/Pictures/image.png";
             Imgcodecs.imwrite(fileName, firstFrame);
         }
-
         @Override
         public Mat processFrame(Mat input) {
             Imgproc.cvtColor(input, hsvImage, Imgproc.COLOR_RGB2HSV);
