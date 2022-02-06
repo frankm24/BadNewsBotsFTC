@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -9,6 +10,9 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
 import java.util.List;
 
@@ -107,6 +111,19 @@ public class ControlTeleOp extends LinearOpMode {
 
             if (Y && !YDebounce) {
                 YDebounce = true;
+                SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+
+                Pose2d startPose = new Pose2d(0, 0, 0);
+
+                drive.setPoseEstimate(startPose);
+
+                TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
+                        .back(24)
+                        .build();
+
+                drive.followTrajectorySequence(trajSeq);
+
+
                 arm.setPosition(0.5);
                 sleep(3000);
                 arm.setPosition(-0.35);
