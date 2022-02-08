@@ -4,6 +4,7 @@ import android.os.Environment;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.vuforia.SmartTerrain;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.opencv.core.Core;
@@ -37,7 +38,7 @@ public class CameraTest extends LinearOpMode {
         camera.showFpsMeterOnViewport(true);
         TestPipeline pipeline = new TestPipeline();
         camera.setPipeline(pipeline);
-        camera.setMillisecondsPermissionTimeout(3000); //Give plenty of time for the
+        camera.setMillisecondsPermissionTimeout(3000); //Give plenty of time for the internal code to ready to avoid errors
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
             @Override
@@ -140,7 +141,6 @@ public class CameraTest extends LinearOpMode {
             } else {
                position = ElementPosition.RIGHT;
             }
-
             //both methods need to be tried, range is probably better
             //Imgproc.adaptiveThreshold(input, processed, Imgproc.ADAPTIVE_THRESH_MEAN_C,);
             Imgproc.rectangle(filteredImage, LeftRect, draw_color, 10);

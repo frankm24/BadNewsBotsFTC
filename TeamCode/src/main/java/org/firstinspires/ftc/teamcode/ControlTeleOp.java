@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.motors.RevRobotics20HdHexMotor;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,6 +13,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcontroller.external.samples.SensorREV2mDistance;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
@@ -35,6 +39,7 @@ public class ControlTeleOp extends LinearOpMode {
     private DcMotorEx intake;
 
     private BNO055IMU imu;
+    private Rev2mDistanceSensor front_tof;
     private Servo pusher;
 
 
@@ -118,7 +123,9 @@ public class ControlTeleOp extends LinearOpMode {
                 drive.setPoseEstimate(startPose);
 
                 TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                        .back(24)
+                        .back(6)
+                        .turn(Math.toRadians(36.9))
+                        .back(20)
                         .build();
 
                 drive.followTrajectorySequence(trajSeq);
@@ -136,7 +143,7 @@ public class ControlTeleOp extends LinearOpMode {
                 arm.setPosition(0.78);
                 sleep(3000);
                 door.setPosition(0.65);
-                sleep(1000);
+                sleep(200);
                 arm.setPosition(0);
                 XDebounce = false;
             }
@@ -330,6 +337,7 @@ public class ControlTeleOp extends LinearOpMode {
             }
             */
             telemetry.addData("IMU Data", imu.getAngularOrientation());
+            telemetry.addData("front_tof: ", front_tof.getDistance(DistanceUnit.INCH));
             telemetry.update();
         }
     }
@@ -343,6 +351,7 @@ public class ControlTeleOp extends LinearOpMode {
         front_right = hardwareMap.get(DcMotor.class, "front_right");
         try {
             intake = hardwareMap.get(DcMotorEx.class, "intake");
+            front_tof = hardwareMap.get(Rev2mDistanceSensor.class, "front_tof");
         } catch (IllegalArgumentException e) {
             telemetry.addLine("expansion hub not working");
             telemetry.update();
