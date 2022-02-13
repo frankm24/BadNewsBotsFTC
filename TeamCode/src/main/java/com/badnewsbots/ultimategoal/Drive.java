@@ -1,8 +1,10 @@
 package com.badnewsbots.ultimategoal;
 
 import com.badnewsbots.ultimategoal.Points;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+@Deprecated
 public class Drive {
     private DcMotor back_left;
     private DcMotor front_left;

@@ -26,6 +26,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.List;
 
+@Disabled
 @Autonomous(name = "Red Autonomous")
 
 public class RedAuto extends LinearOpMode {

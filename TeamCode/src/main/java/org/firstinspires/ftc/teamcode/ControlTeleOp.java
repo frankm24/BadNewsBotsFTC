@@ -4,6 +4,7 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.motors.RevRobotics20HdHexMotor;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -63,7 +64,9 @@ public class ControlTeleOp extends LinearOpMode {
     boolean YDebounce = false;
     double YDebounceTime = 0;
 
-    //Events code
+    SampleMecanumDrive drive;
+    TrajectorySequence part1;
+    TrajectorySequence part2;
 
     //Maths lol
     //static final double sqrt2over2 = (Math.sqrt(2)) / 2;
@@ -116,25 +119,17 @@ public class ControlTeleOp extends LinearOpMode {
 
             if (Y && !YDebounce) {
                 YDebounce = true;
-                SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
-                Pose2d startPose = new Pose2d(0, 0, 0);
-
-                drive.setPoseEstimate(startPose);
-
-                TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                        .back(6)
-                        .turn(Math.toRadians(36.9))
-                        .back(20)
-                        .build();
-
-                drive.followTrajectorySequence(trajSeq);
-
+                drive.setPoseEstimate(new Pose2d(0, 0, 0));
+                drive.followTrajectorySequence(part1);
 
                 arm.setPosition(0.5);
                 sleep(3000);
                 arm.setPosition(-0.35);
                 YDebounce = false;
+
+                //drive.followTrajectorySequence(part2);
+
             }
             if (X && !XDebounce) {
                 XDebounce = true;
@@ -371,6 +366,19 @@ public class ControlTeleOp extends LinearOpMode {
         parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parameters.loggingEnabled      = false;
         imu.initialize(parameters);
+
+        drive = new SampleMecanumDrive(hardwareMap);
+        //Trajectories
+        part1 = drive.trajectorySequenceBuilder(new Pose2d(0,0,0))
+                .strafeRight(23.75)
+                .back(22)
+                .build();
+        part2 = drive.trajectorySequenceBuilder(new Pose2d(0,0,0))
+                .forward(27)
+                .turn(Math.toRadians(53.1))
+                .strafeRight(1)
+                .forward(47)
+                .build();
 
         //flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 

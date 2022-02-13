@@ -26,6 +26,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.List;
 
+@Disabled
 @Autonomous(name = "Blue Autonomous")
 
 public class BlueAuto extends LinearOpMode {
