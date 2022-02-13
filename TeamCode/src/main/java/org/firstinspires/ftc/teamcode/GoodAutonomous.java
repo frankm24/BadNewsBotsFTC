@@ -2,11 +2,19 @@ package org.firstinspires.ftc.teamcode;
 
 import android.os.Environment;
 
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.vuforia.SmartTerrain;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -28,9 +36,73 @@ import org.openftc.easyopencv.OpenCvWebcam;
 import java.util.Arrays;
 
 @TeleOp(group = "Testing")
-public class CameraTest extends LinearOpMode {
+public class GoodAutonomous extends LinearOpMode {
+    private DcMotor back_left;
+    private DcMotor front_left;
+    private DcMotor back_right;
+    private DcMotor front_right;
+    private DcMotor[] motors = {back_left, front_left, front_right, back_right};
 
+    private Servo arm;
+    private Servo door;
+
+    private DcMotorEx intake;
+
+    private BNO055IMU imu;
+    private Rev2mDistanceSensor front_tof;
+    private Servo pusher;
+
+    // settings
+    final int FlywheelTargetSpeed = 1500; // ticks per second
+
+    SampleMecanumDrive drive;
+    TrajectorySequence part1;
+    TrajectorySequence part2;
+
+    @Override
     public void runOpMode() {
+        // hardwareMap.get stuff
+        back_left = hardwareMap.get(DcMotor.class, "back_left");
+        front_left = hardwareMap.get(DcMotor.class, "front_left");
+        back_right = hardwareMap.get(DcMotor.class, "back_right");
+        front_right = hardwareMap.get(DcMotor.class, "front_right");
+        try {
+            intake = hardwareMap.get(DcMotorEx.class, "intake");
+            front_tof = hardwareMap.get(Rev2mDistanceSensor.class, "front_tof");
+        } catch (IllegalArgumentException e) {
+            telemetry.addLine("expansion hub not working");
+            telemetry.update();
+        }
+        arm = hardwareMap.get(Servo.class, "arm");
+        door = hardwareMap.get(Servo.class, "door");
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        // Reverse the motors that runs backwards (LEFT SIDE)
+        front_left.setDirection(DcMotor.Direction.REVERSE);
+        back_left.setDirection(DcMotor.Direction.REVERSE);
+
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+
+        parameters.mode                = BNO055IMU.SensorMode.IMU;
+        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.loggingEnabled      = false;
+        imu.initialize(parameters);
+
+        // Code for the autonomous driving task
+        drive = new SampleMecanumDrive(hardwareMap);
+
+        part1 = drive.trajectorySequenceBuilder(new Pose2d(0,0,0))
+                .strafeRight(23.75)
+                .back(22)
+                .build();
+        part2 = drive.trajectorySequenceBuilder(new Pose2d(0,0,0))
+                .forward(27)
+                .turn(Math.toRadians(53.1))
+                .strafeRight(1)
+                .forward(47)
+                .build();
+
+        // OpenCV begins here
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
         OpenCvWebcam camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
@@ -38,7 +110,7 @@ public class CameraTest extends LinearOpMode {
         camera.showFpsMeterOnViewport(true);
         TestPipeline pipeline = new TestPipeline();
         camera.setPipeline(pipeline);
-        camera.setMillisecondsPermissionTimeout(3000); //Give plenty of time for the internal code to ready to avoid errors
+        camera.setMillisecondsPermissionTimeout(3000); // Give plenty of time for the internal code to ready to avoid errors
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
             @Override
@@ -58,7 +130,7 @@ public class CameraTest extends LinearOpMode {
                  */
             }
         });
-        while (!opModeIsActive() && !isStopRequested()) {
+        while (!isStarted() && !isStopRequested()) {
             int[] values = pipeline.getValues();
             telemetry.addData("Element Position", pipeline.getElementPosition());
             telemetry.addData("Values:", Arrays.toString(values));
@@ -66,9 +138,41 @@ public class CameraTest extends LinearOpMode {
             telemetry.update();
             sleep(100);
         }
+        //  POST-Init
         camera.stopStreaming();
-    }
 
+        TestPipeline.ElementPosition element_position = pipeline.getElementPosition();
+
+        telemetry.addData("Final Determined Element Position:", element_position);
+        telemetry.update();
+
+        switch (element_position)
+        {
+            case LEFT:
+            {
+                // down
+                break;
+            }
+
+            case CENTER:
+            {
+                // middle
+                break;
+            }
+
+            case RIGHT:
+            {
+                // up
+                drive.setPoseEstimate(new Pose2d(0, 0, 0));
+                drive.followTrajectorySequence(part1);
+                arm.setPosition(0.5);
+                sleep(3000);
+                arm.setPosition(-0.35);
+                break;
+            }
+        }
+    }
+    // Contains the code for processing the camera feed
     public static class TestPipeline extends OpenCvPipeline {
 
         enum ElementPosition {
@@ -159,5 +263,6 @@ public class CameraTest extends LinearOpMode {
             return new int[] {leftAvg, centerAvg, rightAvg};
         }
     }
+
 }
 

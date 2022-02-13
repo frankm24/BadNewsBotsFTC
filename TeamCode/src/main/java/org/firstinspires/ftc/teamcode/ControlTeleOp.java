@@ -64,10 +64,6 @@ public class ControlTeleOp extends LinearOpMode {
     boolean YDebounce = false;
     double YDebounceTime = 0;
 
-    SampleMecanumDrive drive;
-    TrajectorySequence part1;
-    TrajectorySequence part2;
-
     //Maths lol
     //static final double sqrt2over2 = (Math.sqrt(2)) / 2;
 
@@ -119,17 +115,10 @@ public class ControlTeleOp extends LinearOpMode {
 
             if (Y && !YDebounce) {
                 YDebounce = true;
-
-                drive.setPoseEstimate(new Pose2d(0, 0, 0));
-                drive.followTrajectorySequence(part1);
-
                 arm.setPosition(0.5);
                 sleep(3000);
                 arm.setPosition(-0.35);
                 YDebounce = false;
-
-                //drive.followTrajectorySequence(part2);
-
             }
             if (X && !XDebounce) {
                 XDebounce = true;
@@ -367,30 +356,14 @@ public class ControlTeleOp extends LinearOpMode {
         parameters.loggingEnabled      = false;
         imu.initialize(parameters);
 
-        drive = new SampleMecanumDrive(hardwareMap);
-        //Trajectories
-        part1 = drive.trajectorySequenceBuilder(new Pose2d(0,0,0))
-                .strafeRight(23.75)
-                .back(22)
-                .build();
-        part2 = drive.trajectorySequenceBuilder(new Pose2d(0,0,0))
-                .forward(27)
-                .turn(Math.toRadians(53.1))
-                .strafeRight(1)
-                .forward(47)
-                .build();
 
-        //flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        //Odometry.setEncoders(front_left, front_right, back_right);
-        // Wait for play button to be pressed
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-        waitForStart();
+
+        waitForStart();  // Wait for play button to be pressed
+
         runtime.reset();
-        //Where stuff happens
         enableGamepadControl();
-       // Odometry.stopTracking();
     }
 }
 
