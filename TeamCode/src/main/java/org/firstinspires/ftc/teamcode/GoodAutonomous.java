@@ -91,11 +91,13 @@ public class GoodAutonomous extends LinearOpMode {
         // Code for the autonomous driving task
         drive = new SampleMecanumDrive(hardwareMap);
 
-        part1 = drive.trajectorySequenceBuilder(new Pose2d(0,0,0))
+        Pose2d redStartPose = new Pose2d(12, -62.25, Math.toRadians(270));
+
+        part1 = drive.trajectorySequenceBuilder(redStartPose)
                 .strafeRight(23.75)
                 .back(22)
                 .build();
-        part2 = drive.trajectorySequenceBuilder(new Pose2d(0,0,0))
+        part2 = drive.trajectorySequenceBuilder(redStartPose)
                 .forward(27)
                 .turn(Math.toRadians(53.1))
                 .strafeRight(1)
@@ -163,7 +165,7 @@ public class GoodAutonomous extends LinearOpMode {
             case RIGHT:
             {
                 // up
-                drive.setPoseEstimate(new Pose2d(0, 0, 0));
+                drive.setPoseEstimate(redStartPose);
                 drive.followTrajectorySequence(part1);
                 arm.setPosition(0.5);
                 sleep(3000);
