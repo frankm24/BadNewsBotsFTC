@@ -1,7 +1,5 @@
-package com.badnewsbots.ultimategoal;
+package badnewsbots.ultimategoal;
 
-import com.badnewsbots.ultimategoal.Points;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 @Deprecated

@@ -5,12 +5,11 @@ import android.os.Environment;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.vuforia.SmartTerrain;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
@@ -23,20 +22,16 @@ import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraBase;
 import org.openftc.easyopencv.OpenCvCameraException;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
-import org.openftc.easyopencv.OpenCvViewport;
-import org.opencv.core.Core;
 import org.openftc.easyopencv.OpenCvWebcam;
 
 import java.util.Arrays;
 
-@TeleOp(group = "Testing")
-public class GoodAutonomous extends LinearOpMode {
+@Autonomous
+public class GoodAutoRedWarehouse extends LinearOpMode {
     private DcMotor back_left;
     private DcMotor front_left;
     private DcMotor back_right;
@@ -56,8 +51,14 @@ public class GoodAutonomous extends LinearOpMode {
     final int FlywheelTargetSpeed = 1500; // ticks per second
 
     SampleMecanumDrive drive;
-    TrajectorySequence part1;
-    TrajectorySequence part2;
+    TrajectorySequence highGoal;
+    TrajectorySequence highGoal2;
+    TrajectorySequence midGoal;
+    TrajectorySequence midGoal2;
+    TrajectorySequence lowGoal;
+    TrajectorySequence lowGoal2;
+
+    OpenCvWebcam camera;
 
     @Override
     public void runOpMode() {
@@ -91,23 +92,50 @@ public class GoodAutonomous extends LinearOpMode {
         // Code for the autonomous driving task
         drive = new SampleMecanumDrive(hardwareMap);
 
-        Pose2d redStartPose = new Pose2d(12, -62.25, Math.toRadians(270));
+        Pose2d redStartPoseWarehouse = new Pose2d(12, -62.25, Math.toRadians(90));
 
-        part1 = drive.trajectorySequenceBuilder(redStartPose)
-                .strafeRight(23.75)
-                .back(22)
+        highGoal = drive.trajectorySequenceBuilder(redStartPoseWarehouse)
+                .strafeLeft(23.75)
+                .forward(21)
                 .build();
-        part2 = drive.trajectorySequenceBuilder(redStartPose)
-                .forward(27)
-                .turn(Math.toRadians(53.1))
-                .strafeRight(1)
-                .forward(47)
+        highGoal2 = drive.trajectorySequenceBuilder(new Pose2d(-11.75,-41.25, Math.toRadians(90)))
+                .lineToSplineHeading(new Pose2d(12, -54, Math.toRadians(180)))
+                .back(48)
                 .build();
+        midGoal = drive.trajectorySequenceBuilder(redStartPoseWarehouse)
+                .strafeLeft(23.75)
+                .forward(17)
+                .build();
+        midGoal2 = drive.trajectorySequenceBuilder(new Pose2d(-11.75,-46.25, Math.toRadians(90)))
+                .lineToSplineHeading(new Pose2d(12, -52, Math.toRadians(180)))
+                .back(48)
+                .build();
+        lowGoal = drive.trajectorySequenceBuilder(redStartPoseWarehouse)
+                .addTemporalMarker(0, () -> {
+                    door.setPosition(0);
+                })
+                .addTemporalMarker(0.1, () -> {
+                    arm.setPosition(0.8);
+                })
+                .addTemporalMarker(3.5, () -> {
+                    door.setPosition(0.65);
+                })
+                .strafeLeft(23.75)
+                .waitSeconds(1.5)
+                .forward(14.5)
+                .waitSeconds(1)
+                .addTemporalMarker(5, () -> {
+                    arm.setPosition(0.2);
+                })
+                .lineToSplineHeading(new Pose2d(12, -52, Math.toRadians(180)))
+                .back(48)
+                .build();
+        //lowGoal2 = drive.trajectorySequenceBuilder(new Pose2d(-11.75, -47.75, Math.toRadians(90)))
 
         // OpenCV begins here
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
-        OpenCvWebcam camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
+        camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
         camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED);
         camera.showFpsMeterOnViewport(true);
         TestPipeline pipeline = new TestPipeline();
@@ -116,20 +144,16 @@ public class GoodAutonomous extends LinearOpMode {
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
             @Override
-            public void onOpened()
-            {
+            public void onOpened() {
                 // Usually this is where you'll want to start streaming from the camera (see section 4)
                 camera.startStreaming(1280, 720, OpenCvCameraRotation.UPRIGHT);
                 telemetry.addLine("Camera stream initialized");
                 telemetry.update();
             }
             @Override
-            public void onError(int errorCode)
-            {
+            public void onError(int errorCode) {
                 throw new OpenCvCameraException("Could not open camera device. Error code: " + errorCode) ;
-                /*
-                 * This will be called if the camera could not be opened
-                 */
+                // This will be called if the camera could not be opened
             }
         });
         while (!isStarted() && !isStopRequested()) {
@@ -148,57 +172,69 @@ public class GoodAutonomous extends LinearOpMode {
         telemetry.addData("Final Determined Element Position:", element_position);
         telemetry.update();
 
-        switch (element_position)
-        {
-            case LEFT:
-            {
-                // down
-                break;
+        switch (element_position) {
+            case LEFT: {
+                // low
+                drive.setPoseEstimate(redStartPoseWarehouse);
+                sleep(10000);
+                drive.followTrajectorySequence(lowGoal);
+                requestOpModeStop();
             }
-
-            case CENTER:
-            {
-                // middle
-                break;
+            case CENTER: {
+                // mid
+                drive.setPoseEstimate(redStartPoseWarehouse);
+                sleep(10000);
+                drive.followTrajectorySequence(midGoal);
+                arm.setPosition(0.5);
+                sleep(3000);
+                arm.setPosition(0.2);
+                drive.followTrajectorySequence(midGoal2);
+                requestOpModeStop();
             }
-
-            case RIGHT:
-            {
+            case RIGHT: {
                 // up
-                drive.setPoseEstimate(redStartPose);
-                drive.followTrajectorySequence(part1);
+                drive.setPoseEstimate(redStartPoseWarehouse);
+                sleep(10000);
+                drive.followTrajectorySequence(highGoal);
                 arm.setPosition(0.5);
                 sleep(3000);
                 arm.setPosition(-0.35);
-                break;
+                drive.followTrajectorySequence(highGoal2);
+                requestOpModeStop();
             }
         }
     }
     // Contains the code for processing the camera feed
     public static class TestPipeline extends OpenCvPipeline {
-
         enum ElementPosition {
             LEFT,
             CENTER,
             RIGHT,
             NONE
         }
+
         //Configure the points for the rectangle areas for detecting saturation values
-        Point Left1 = new Point(100, 400);
-        Point Left2 = new Point(300, 600);
+        Point Left1 = new Point(0, 520);
+        Point Left2 = new Point(200, 720);
         Rect LeftRect = new Rect(Left1, Left2);
 
-        Point Center1 = new Point(450, 400);
-        Point Center2 = new Point(650, 600);
+        Point Center1 = new Point(500, 520);
+        Point Center2 = new Point(700, 720);
         Rect CenterRect = new Rect(Center1, Center2);
 
-        Point Right1 = new Point(1000, 400);
-        Point Right2 = new Point(1200, 600);
+        Point Right1 = new Point(1000, 520);
+        Point Right2 = new Point(1200, 720);
         Rect RightRect = new Rect(Right1, Right2);
 
-        Scalar draw_color = new Scalar(255, 0, 0);
+        Rect[] rectangles = {LeftRect, CenterRect, RightRect};
 
-        boolean returnResult = true;
+        // Record or not?
+        final boolean record = false;
+        final boolean returnResult = true;
+
+        Scalar noDraw = new Scalar(0, 0, 0);
+        Scalar Draw = new Scalar(255, 0, 0);
+        Scalar red = new Scalar(255, 0, 0);
 
         Scalar min = new Scalar(45, 30, 50);
         Scalar max = new Scalar(70, 255, 255);
@@ -225,6 +261,11 @@ public class GoodAutonomous extends LinearOpMode {
             LeftMat = filteredImage.submat(LeftRect);
             CenterMat = filteredImage.submat(CenterRect);
             RightMat = filteredImage.submat(RightRect);
+
+            Imgproc.rectangle(firstFrame, LeftRect, red, 10);
+            Imgproc.rectangle(firstFrame, CenterRect, red, 10);
+            Imgproc.rectangle(firstFrame, RightRect, red, 10);
+
             String fileName = Environment.getExternalStorageDirectory() + "/Pictures/image.png";
             Imgcodecs.imwrite(fileName, firstFrame);
         }
@@ -236,23 +277,28 @@ public class GoodAutonomous extends LinearOpMode {
             centerAvg = (int) Core.mean(CenterMat).val[0];
             rightAvg = (int) Core.mean(RightMat).val[0];
 
-            //int avg = Math.max(leftAvg, Math.max(centerAvg, rightAvg));
-
             int mostGreen = Math.max(leftAvg, Math.max(centerAvg, rightAvg));
+
+            //Scalar left_draw_color = Draw;
+            //Scalar center_draw_color = Draw;
+            //Scalar right_draw_color = Draw;
 
             if (mostGreen == leftAvg) {
                position = ElementPosition.LEFT;
+               //left_draw_color = Draw;
             } else if (mostGreen == centerAvg) {
                position = ElementPosition.CENTER;
+               //center_draw_color = Draw;
             } else {
                position = ElementPosition.RIGHT;
+               //right_draw_color = Draw;
             }
-            //both methods need to be tried, range is probably better
-            //Imgproc.adaptiveThreshold(input, processed, Imgproc.ADAPTIVE_THRESH_MEAN_C,);
-            Imgproc.rectangle(filteredImage, LeftRect, draw_color, 10);
-            Imgproc.rectangle(filteredImage, CenterRect, draw_color, 10);
-            Imgproc.rectangle(filteredImage, RightRect, draw_color, 10);
-            if (returnResult == true) {
+
+            //Imgproc.rectangle(filteredImage, LeftRect, left_draw_color, 10);
+            //Imgproc.rectangle(filteredImage, CenterRect, center_draw_color, 10);
+            //Imgproc.rectangle(filteredImage, RightRect, right_draw_color, 10);
+
+            if (returnResult) {
                 return filteredImage;
             } else {
                 return input;
@@ -265,6 +311,5 @@ public class GoodAutonomous extends LinearOpMode {
             return new int[] {leftAvg, centerAvg, rightAvg};
         }
     }
-
 }
 

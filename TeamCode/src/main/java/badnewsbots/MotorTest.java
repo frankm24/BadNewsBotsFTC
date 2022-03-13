@@ -1,4 +1,4 @@
-package com.badnewsbots;
+package badnewsbots;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;

@@ -1,4 +1,4 @@
-package com.badnewsbots.ultimategoal;
+package badnewsbots.ultimategoal;
 
 @Deprecated
 public class Points {

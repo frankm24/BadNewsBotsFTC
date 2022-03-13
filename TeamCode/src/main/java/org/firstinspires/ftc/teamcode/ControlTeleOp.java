@@ -1,33 +1,33 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.acmerobotics.roadrunner.geometry.Pose2d;
+import android.os.Environment;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.motors.RevRobotics20HdHexMotor;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.SensorREV2mDistance;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
-import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
-
-import java.util.List;
+import org.opencv.core.Mat;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraException;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
+import org.openftc.easyopencv.OpenCvPipeline;
+import org.openftc.easyopencv.OpenCvWebcam;
+import org.openftc.easyopencv.PipelineRecordingParameters;
 
 @TeleOp
 public class ControlTeleOp extends LinearOpMode {
-
-    //Elapsed time
+    // Elapsed time
     private ElapsedTime runtime = new ElapsedTime();
 
-    //Declare motors
+    // Declare motors
     private DcMotor back_left;
     private DcMotor front_left;
     private DcMotor back_right;
@@ -38,36 +38,66 @@ public class ControlTeleOp extends LinearOpMode {
     private Servo door;
 
     private DcMotorEx intake;
+    private DcMotorEx carousel;
 
     private BNO055IMU imu;
     private Rev2mDistanceSensor front_tof;
     private Servo pusher;
+    private OpenCvWebcam camera;
 
 
     //settings
-    final int FlywheelTargetSpeed = 1500; //ticks per second
+    final int IntakeTargetSpeed = 1000; //ticks per second
+    final int CarouselTargetSpeed = 2000; //ticks per second
     float SpeedMultiplier = 0.5f; //scale movement speed
 
     //Button code
-    double ADebounceTimer = 0.3; //seconds
-    double XDebounceTimer = 0.3;
-    double YDebounceTimer = 0.3;
+    double DebounceTimer = 0.3; // 0.3 seconds
 
     boolean RevStatus = false;
     boolean doorClosed = false;
     boolean servoUp = false;
     boolean isArmInMotion = false;
+    boolean armIsRaisedBarrier = false;
+    int duckIsSpinning = 0;
+    boolean bButtonServoIsInHighPos = false;
     boolean ADebounce = false;
     double ADebounceTime = 0;
     boolean XDebounce = false;
     double XDebounceTime = 0;
     boolean YDebounce = false;
     double YDebounceTime = 0;
+    boolean BDebounce = false;
+    double BDebounceTime = 0;
+    boolean dpad_upDebounce = false;
+    double dpad_upDebounceTime = 0;
+    boolean right_bumperDebounce = false;
+    double right_bumperDebounceTime = 0;
+    boolean left_bumperDebounce = false;
+    double left_bumperDebounceTime = 0;
+    boolean startDebounce = false;
+    double startDebounceTime = 0;
 
-    //Maths lol
-    //static final double sqrt2over2 = (Math.sqrt(2)) / 2;
 
-    public void smartWait(double time) {
+    class InputLoop implements Runnable {
+        @Override
+        public void run() {
+            while (opModeIsActive()) {
+                idle();
+            }
+        }
+    }
+
+    class ActionLoop implements Runnable {
+        @Override
+        public void run() {
+            while (opModeIsActive()) {
+                idle();
+            }
+        }
+    }
+
+    public void waitWithoutSleep(double time) {
         double t = getRuntime();
         while (true) {
             if (getRuntime() - t >= time) {
@@ -77,46 +107,31 @@ public class ControlTeleOp extends LinearOpMode {
     }
 
     public void enableGamepadControl() {
-        //Points points = new Points();
-        //Drive drive = new Drive();
-        //drive.setMotors(back_left, front_left, back_right, front_right);
-
         String LeftStickInputDirection = "";
         telemetry.addData("Left Stick Input Direction", LeftStickInputDirection);
         String RightStickInputDirection = "";
         telemetry.addData("Right Stick Input Direction", RightStickInputDirection);
         telemetry.update();
 
-        while (opModeIsActive() && !isStopRequested()) {
-            /*
-            wip version for devin *sigh*:
-            if (X && !isArmInMotion) {
-                isArmInMotion = true;
-                telemetry.addLine("Arm moving.");
-                door.close();
-                arm.setPosition(0.5);
-                smartWait(<Time it takes for servo to rise>)
-                door.open();
-                smartWait(3000) or waitForButtonPress();
-                arm.setPosition(-0.06);
-                smartWait(<Time it takes for servo to rise>);
-                isArmInMotion = false;
-            }
-
-             */
-
-            float LeftStickY = -1 * gamepad1.left_stick_y * SpeedMultiplier;  //To use, press start and A on gamepad
+        while (opModeIsActive()) {
+            float LeftStickY = -1 * gamepad1.left_stick_y * SpeedMultiplier;
             float LeftStickX = gamepad1.left_stick_x * SpeedMultiplier;
             float RightStickY = -1 * gamepad1.right_stick_y * SpeedMultiplier;
             float RightStickX = gamepad1.right_stick_x * SpeedMultiplier;
             boolean A = gamepad1.a;
             boolean X = gamepad1.x;
             boolean Y = gamepad1.y;
+            boolean B = gamepad1.b;
+            boolean dpad_up = gamepad1.dpad_up;
+            boolean right_bumper = gamepad1.right_bumper;
+            boolean left_bumper = gamepad1.left_bumper;
+            boolean start = gamepad1.start;
+            double time = getRuntime();
 
             if (Y && !YDebounce) {
                 YDebounce = true;
                 arm.setPosition(0.5);
-                sleep(3000);
+                sleep(1000);
                 arm.setPosition(-0.35);
                 YDebounce = false;
             }
@@ -125,58 +140,94 @@ public class ControlTeleOp extends LinearOpMode {
                 door.setPosition(0);
                 sleep(100);
                 arm.setPosition(0.78);
-                sleep(3000);
+                sleep(2000);
                 door.setPosition(0.65);
                 sleep(200);
                 arm.setPosition(0);
                 XDebounce = false;
             }
             if (A && !ADebounce) {
-                telemetry.addLine("A detected");
-                ADebounceTime = getRuntime();
+                ADebounceTime = time;
                 ADebounce = true;
                 if (!RevStatus) {
-                    intake.setVelocity(FlywheelTargetSpeed);
+                    intake.setVelocity(IntakeTargetSpeed);
                     RevStatus = true;
-                } else if (RevStatus) {
+                } else {
                     intake.setVelocity(0);
                     RevStatus = false;
                 }
             }
-            /*
-            if (X && !XDebounce) {
-                XDebounceTime = getRuntime();
-                XDebounce = true;
-                if (servoUp) {
-                    telemetry.addLine("X detected");
-                    arm.setPosition(-0.06);
-                    servoUp = false;
+            if (B && !BDebounce) {
+                BDebounceTime = time;
+                BDebounce = true;
+                if (bButtonServoIsInHighPos) {
+                    arm.setPosition(0.47); //0.47
+                }
+                else {
+                    bButtonServoIsInHighPos = true;
+                    arm.setPosition(0.79);
+                }
+            }
+            if (dpad_up && !dpad_upDebounce) {
+                dpad_upDebounceTime = time;
+                dpad_upDebounce = true;
+                arm.setPosition(0.6);
+            }
+            if (right_bumper && !right_bumperDebounce) {
+                right_bumperDebounceTime = time;
+                right_bumperDebounce = true;
+                if (duckIsSpinning == 2) {
+                    duckIsSpinning = 0;
+                    carousel.setVelocity(-CarouselTargetSpeed);
+                } else if (duckIsSpinning == 1) {
+                    duckIsSpinning = 2;
+                    carousel.setVelocity(0);
                 } else {
-                    arm.setPosition(0.5);
-                    servoUp = true;
+                    duckIsSpinning = 1;
+                    carousel.setVelocity(CarouselTargetSpeed);
                 }
+
             }
-            if (Y && !YDebounce) {
-                telemetry.addLine("Y detected");
-                YDebounceTime = getRuntime();
-                YDebounce = true;
-                if (!doorClosed) {
+            if (left_bumper && !left_bumperDebounce) {
+                left_bumperDebounceTime = time;
+                left_bumperDebounce = true;
+                if (armIsRaisedBarrier) {
+                    armIsRaisedBarrier = false;
+                    arm.setPosition(0);
+                    sleep(30);
                     door.setPosition(0.65);
-                    doorClosed = true;
-                } else if (doorClosed) {
-                    door.setPosition(1);
-                    doorClosed = false;
+                } else {
+                    armIsRaisedBarrier = true;
+                    arm.setPosition(0.2);
+                    door.setPosition(0);
+                }
+
+            }
+            if (start && !startDebounce) {
+                startDebounce = true;
+                if (SpeedMultiplier == 0.5f) {
+                    SpeedMultiplier = 1.0f;
+                } else {
+                    SpeedMultiplier = 0.5f;
                 }
             }
-            if (getRuntime() - XDebounceTime >= XDebounceTimer) {
-                XDebounce = false;
-            }
-            if (getRuntime() - YDebounceTime >= YDebounceTimer) {
-                YDebounce = false;
-            }
-             */
-            if (getRuntime() - ADebounceTime >= ADebounceTimer) {
+            if (time - ADebounceTime >= DebounceTimer) {
                 ADebounce = false;
+            }
+            if (time - BDebounceTime >= DebounceTimer) {
+                BDebounce = false;
+            }
+            if (time - dpad_upDebounceTime >= DebounceTimer) {
+                dpad_upDebounce = false;
+            }
+            if (time - right_bumperDebounceTime >= DebounceTimer) {
+                right_bumperDebounce = false;
+            }
+            if (time - left_bumperDebounceTime >= DebounceTimer) {
+                left_bumperDebounce = false;
+            }
+            if (time - startDebounceTime >= DebounceTimer) {
+                startDebounce = false;
             }
             double denominator = Math.max(Math.abs(LeftStickY) + Math.abs(LeftStickX) + Math.abs(RightStickX), 1);
             double front_leftPower = (LeftStickY + LeftStickX + RightStickX) / denominator;
@@ -187,139 +238,7 @@ public class ControlTeleOp extends LinearOpMode {
             back_left.setPower(back_leftPower);
             front_right.setPower(front_rightPower);
             back_right.setPower(back_rightPower);
-            //Old code in there... you don't want to look...
-            /*
-            if (LeftStickX == 0 && LeftStickY == 0) {
-                drive.setMotorsToZero();
-                LeftStickInputDirection = "none";
-            }
-            else if (LeftStickX >= 0 && LeftStickY > 0) { //Quadrant I
-                if (points.distanceFormula(LeftStickX, LeftStickY, 0, 1) < //Closer to fd than midp
-                        points.distanceFormula(LeftStickX, LeftStickY, sqrt2over2, sqrt2over2)) {
-                    drive.forward(drive.getPowerFromMagnitude(LeftStickX, LeftStickY));
-                    LeftStickInputDirection = "forward";
-                }
-                else if (points.distanceFormula(LeftStickX, LeftStickY, 1, 0) < //Closer to right than midp
-                        points.distanceFormula(LeftStickX, LeftStickY, sqrt2over2, sqrt2over2)) {
-                    drive.right(drive.getPowerFromMagnitude(LeftStickX, LeftStickY));
-                    LeftStickInputDirection = "right";
-                }
-                else {
-                    drive.forwardRight(drive.getPowerFromMagnitude(LeftStickX, LeftStickY));
-                    LeftStickInputDirection = "forward_right";
-                }
-            }
-            else if (LeftStickX < 0 && LeftStickY >= 0) { //Quadrant II
-                if (points.distanceFormula(LeftStickX, LeftStickY, 0, 1) < //Closer to fd than midp
-                        points.distanceFormula(LeftStickX, LeftStickY, -1 * sqrt2over2, sqrt2over2)) {
-                    drive.forward(drive.getPowerFromMagnitude(LeftStickX, LeftStickY));
-                    LeftStickInputDirection = "forward";
-                }
-                else if (points.distanceFormula(LeftStickX, LeftStickY, -1, 0) < //Closer to left than midp
-                        points.distanceFormula(LeftStickX, LeftStickY, -1 * sqrt2over2, sqrt2over2)) {
-                    drive.left(drive.getPowerFromMagnitude(LeftStickX, LeftStickY));
-                    LeftStickInputDirection = "left";
-                }
-                else {
-                    drive.forwardLeft(drive.getPowerFromMagnitude(LeftStickX, LeftStickY));
-                    LeftStickInputDirection = "forward_left";
-                }
-            }
-            else if (LeftStickX <= 0 && LeftStickY < 0) { //Quadrant III
-                if (points.distanceFormula(LeftStickX, LeftStickY, 0, -1) < //Closer to bkwd than midp
-                        points.distanceFormula(LeftStickX, LeftStickY, -1 * sqrt2over2, -1 * sqrt2over2)) {
-                    drive.backward(drive.getPowerFromMagnitude(LeftStickX, LeftStickY));
-                    LeftStickInputDirection = "backward";
-                }
-                else if (points.distanceFormula(LeftStickX, LeftStickY, -1, 0) < //Closer to left than midp
-                        points.distanceFormula(LeftStickX, LeftStickY, -1 * sqrt2over2, -1 * sqrt2over2)) {
-                    drive.left(drive.getPowerFromMagnitude(LeftStickX, LeftStickY));
-                    LeftStickInputDirection = "left";
-                }
-                else {
-                    drive.backLeft(drive.getPowerFromMagnitude(LeftStickX, LeftStickY));
-                    LeftStickInputDirection = "back_left";
-                }
-            }
-            else { //Quadrant IV
-                if (points.distanceFormula(LeftStickX, LeftStickY, 0, -1) < //Closer to bkwd than midp
-                        points.distanceFormula(LeftStickX, LeftStickY, sqrt2over2, -1 * sqrt2over2)) {
-                    drive.backward(drive.getPowerFromMagnitude(LeftStickX, LeftStickY));
-                    LeftStickInputDirection = "backward";
-                }
-                else if (points.distanceFormula(LeftStickX, LeftStickY, 1, 0) < //Closer to right than midp
-                        points.distanceFormula(LeftStickX, LeftStickY, sqrt2over2, -1 * sqrt2over2)) {
-                    drive.right(drive.getPowerFromMagnitude(LeftStickX, LeftStickY));
-                    LeftStickInputDirection = "right";
-                }
-                else {
-                    drive.backRight(drive.getPowerFromMagnitude(LeftStickX, LeftStickY));
-                    LeftStickInputDirection = "back_right";
-                }
-            }
-            //Right Stick
-            if (RightStickX == 0 && RightStickY == 0) {
-                drive.setMotorsToZero();
-                RightStickInputDirection = "none";
-            }
-            else if (RightStickX >= 0 && RightStickY > 0) { //Quadrant I
-                if (points.distanceFormula(RightStickX, RightStickY, 0, 1) < //Closer to fd than midp
-                        points.distanceFormula(RightStickX, RightStickY, sqrt2over2, sqrt2over2)) {
-                    RightStickInputDirection = "forward";
-                }
-                else if (points.distanceFormula(RightStickX, RightStickY, 1, 0) < //Closer to right than midp
-                        points.distanceFormula(RightStickX, RightStickY, sqrt2over2, sqrt2over2)) {
-                    drive.turnRight(drive.getPowerFromMagnitude(RightStickX, RightStickY));
-                    RightStickInputDirection = "right";
-                }
-                else {
-                    RightStickInputDirection = "forward_right";
-                }
 
-            }
-            else if (RightStickX < 0 && RightStickY >= 0) { //Quadrant II
-                if (points.distanceFormula(RightStickX, RightStickY, 0, 1) < //Closer to fd than midp
-                        points.distanceFormula(RightStickX, RightStickY, -1 * sqrt2over2, sqrt2over2)) {
-                    RightStickInputDirection = "forward";
-                }
-                else if (points.distanceFormula(RightStickX, RightStickY, -1, 0) < //Closer to left than midp
-                        points.distanceFormula(RightStickX, RightStickY, -1 * sqrt2over2, sqrt2over2)) {
-                    drive.turnLeft(drive.getPowerFromMagnitude(RightStickX, RightStickY));
-                    RightStickInputDirection = "left";
-                }
-                else {
-                    RightStickInputDirection = "forward_left";
-                }
-            }
-            else if (RightStickX <= 0 && RightStickY < 0) { //Quadrant III
-                if (points.distanceFormula(RightStickX, RightStickY, 0, -1) < //Closer to bkwd than midp
-                        points.distanceFormula(RightStickX, RightStickY, -1 * sqrt2over2, -1 * sqrt2over2)) {
-                    RightStickInputDirection = "backward";
-                }
-                else if (points.distanceFormula(RightStickX, RightStickY, -1, 0) < //Closer to left than midp
-                        points.distanceFormula(RightStickX, RightStickY, -1 * sqrt2over2, -1 * sqrt2over2)) {
-                    drive.turnLeft(drive.getPowerFromMagnitude(RightStickX, RightStickY));
-                    RightStickInputDirection = "left";
-                }
-                else {
-                    RightStickInputDirection = "back_left";
-                }
-            }
-            else { //Quadrant IV
-                if (points.distanceFormula(RightStickX, RightStickY, 0, -1) < //Closer to bkwd than midp
-                        points.distanceFormula(RightStickX, RightStickY, sqrt2over2, -1 * sqrt2over2)) {
-                    RightStickInputDirection = "backward";
-                }
-                else if (points.distanceFormula(RightStickX, RightStickY, 1, 0) < //Closer to right than midp
-                        points.distanceFormula(RightStickX, RightStickY, sqrt2over2, -1 * sqrt2over2)) {
-                    drive.turnRight(drive.getPowerFromMagnitude(RightStickX, RightStickY));
-                    RightStickInputDirection = "right";
-                }
-                else {
-                    RightStickInputDirection = "back_right";
-                }
-            }
-            */
             telemetry.addData("IMU Data", imu.getAngularOrientation());
             telemetry.addData("front_tof: ", front_tof.getDistance(DistanceUnit.INCH));
             telemetry.update();
@@ -328,13 +247,13 @@ public class ControlTeleOp extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        // hardwareMap.get stuff
         back_left = hardwareMap.get(DcMotor.class, "back_left");
         front_left = hardwareMap.get(DcMotor.class, "front_left");
         back_right = hardwareMap.get(DcMotor.class, "back_right");
         front_right = hardwareMap.get(DcMotor.class, "front_right");
         try {
             intake = hardwareMap.get(DcMotorEx.class, "intake");
+            carousel = hardwareMap.get(DcMotorEx.class, "duck");
             front_tof = hardwareMap.get(Rev2mDistanceSensor.class, "front_tof");
         } catch (IllegalArgumentException e) {
             telemetry.addLine("expansion hub not working");
@@ -356,14 +275,60 @@ public class ControlTeleOp extends LinearOpMode {
         parameters.loggingEnabled      = false;
         imu.initialize(parameters);
 
+        // OpenCV begins here
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
+        camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
+        camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED);
+        camera.showFpsMeterOnViewport(true);
+        RecordingPipeline pipeline = new RecordingPipeline();
+        camera.setPipeline(pipeline);
+        camera.setMillisecondsPermissionTimeout(3000); // Give plenty of time for the internal code to ready to avoid errors
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+        {
+            @Override
+            public void onOpened() {
+                // Usually this is where you'll want to start streaming from the camera (see section 4)
+                camera.startStreaming(1280, 720, OpenCvCameraRotation.UPRIGHT);
+                telemetry.addLine("Camera stream initialized");
+                telemetry.update();
+            }
+            @Override
+            public void onError(int errorCode) {
+                throw new OpenCvCameraException("Could not open camera device. Error code: " + errorCode) ;
+                // This will be called if the camera could not be opened
+            }
+        });
+
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-
         waitForStart();  // Wait for play button to be pressed
 
         runtime.reset();
         enableGamepadControl();
+    }
+    public class RecordingPipeline extends OpenCvPipeline {
+        final boolean record = false;
+
+        @Override
+        public Mat processFrame(Mat input) {
+            return input;
+        }
+
+        @Override
+        public void init(Mat input) {
+            if (record) {
+                camera.startRecordingPipeline(
+                        new PipelineRecordingParameters.Builder()
+                                .setBitrate(4, PipelineRecordingParameters.BitrateUnits.Mbps)
+                                .setEncoder(PipelineRecordingParameters.Encoder.H264)
+                                .setOutputFormat(PipelineRecordingParameters.OutputFormat.MPEG_4)
+                                .setFrameRate(30)
+                                .setPath(Environment.getExternalStorageDirectory() + "/pipeline_rec_" + ".mp4")
+                                .build());
+            }
+        }
     }
 }
 

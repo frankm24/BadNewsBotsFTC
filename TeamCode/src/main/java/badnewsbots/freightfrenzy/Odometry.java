@@ -1,4 +1,4 @@
-package com.badnewsbots.freightfrenzy;
+package badnewsbots.freightfrenzy;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 

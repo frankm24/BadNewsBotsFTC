@@ -1,6 +1,5 @@
-package com.badnewsbots.ultimategoal;
+package badnewsbots.ultimategoal;
 
-import com.badnewsbots.ultimategoal.Drive;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
