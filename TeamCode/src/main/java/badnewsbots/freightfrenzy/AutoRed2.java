@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package badnewsbots.freightfrenzy;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
 @Disabled
 @Autonomous
-public class AutoBlue1 extends LinearOpMode {
+public class AutoRed2 extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -21,7 +21,8 @@ public class AutoBlue1 extends LinearOpMode {
             drive.setPoseEstimate(startPose);
 
             TrajectorySequence trajSeq = drive.trajectorySequenceBuilder(startPose)
-                    .forward(23)
+                    .strafeLeft(18)
+                    .forward(80)
                     .build();
 
             waitForStart();

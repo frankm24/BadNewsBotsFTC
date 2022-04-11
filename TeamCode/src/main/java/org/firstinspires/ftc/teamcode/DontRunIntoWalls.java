@@ -2,17 +2,23 @@ package org.firstinspires.ftc.teamcode;
 
 import android.os.Environment;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.checkerframework.checker.units.qual.Speed;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.slam.Map;
+import org.firstinspires.ftc.teamcode.slam.UltrasonicSensor;
 import org.opencv.core.Mat;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraException;
@@ -22,10 +28,12 @@ import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
 import org.openftc.easyopencv.PipelineRecordingParameters;
 
-public class DontRunIntoWalls  extends LinearOpMode {
-    // Elapsed time
-    private ElapsedTime runtime = new ElapsedTime();
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
+@Autonomous
+public class DontRunIntoWalls  extends LinearOpMode {
     // Declare motors
     private DcMotor back_left;
     private DcMotor front_left;
@@ -40,18 +48,29 @@ public class DontRunIntoWalls  extends LinearOpMode {
     private DcMotorEx carousel;
 
     private BNO055IMU imu;
-    private Rev2mDistanceSensor front_tof;
     private Servo pusher;
     private OpenCvWebcam camera;
 
-    float SpeedMultiplier = 0.5f; //scale movement speed
+    private Rev2mDistanceSensor front_tof;
+    private ModernRoboticsI2cRangeSensor mr_sensor;
 
-    public void setMotorPower(double power) {
+    UltrasonicSensor front_center_ultrasonic;
+    private List<UltrasonicSensor> ultrasonicSensors;
+    List<Pose2d> initial_points;
+    private Map map;
+
+    SampleMecanumDrive drive;
+
+    float SpeedMultiplier = 0.5f; //scale movement speed
+    Pose2d startPose = new Pose2d();
+
+    private void setMotorPower(double power) {
         for (DcMotor motor : motors) {
             motor.setPower(power);
         }
     }
-    public void setMotorPowerControllerVector(double LeftStickX, double LeftStickY, double RightStickX) {
+
+    private void setMotorPowerControllerVector(double LeftStickX, double LeftStickY, double RightStickX) {
         LeftStickX *= SpeedMultiplier;
         LeftStickY *= SpeedMultiplier;
         RightStickX *= SpeedMultiplier;
@@ -66,6 +85,44 @@ public class DontRunIntoWalls  extends LinearOpMode {
         back_right.setPower(back_rightPower);
     }
 
+    private List<Double> getSensorReadings(DistanceUnit unit) {
+        List<Double> readings = new ArrayList<>();
+        for (UltrasonicSensor sensor : ultrasonicSensors) {
+            readings.add(sensor.getSensor().getDistance(unit));
+        }
+        return readings;
+    }
+    private List<Pose2d> convertReadingsToPoints(List<Double> readings) {
+        /*
+        if the sensor is facing forward, add reading to x
+        if the sensor is facing right, add reading to y
+        if the sensor is facing backward, add -1 * reading to x
+        if the sensor is facing left, add -1 * reading to y
+         */
+        Iterator<UltrasonicSensor> sensor_iter = ultrasonicSensors.iterator();
+        Iterator<Double> readings_iter = readings.iterator();
+        List<Pose2d> points = new ArrayList<>();
+        while (sensor_iter.hasNext() && readings_iter.hasNext()) {
+            UltrasonicSensor sensor = sensor_iter.next();
+            double reading = readings_iter.next();
+            // If reading is out of sensor range (shows up as max double value), skip!
+            if (reading == DistanceUnit.infinity) {
+                continue;
+            }
+            /*
+            the following step is not done using normal trig angles, 0 radians is forward, not right
+            this is to match the x axis being forward and the y axis being left/right according to
+            the robot's localizer
+
+             */
+            double sensor_heading = sensor.getPosition().getHeading();
+            Pose2d reading_pose = new Pose2d(Math.cos(sensor_heading) * reading, Math.sin(sensor_heading) * reading);
+            Pose2d point = drive.getPoseEstimate().plus(sensor.getPosition()).plus(reading_pose);
+            points.add(point);
+        }
+        return points;
+    }
+
     @Override
     public void runOpMode() {
         back_left = hardwareMap.get(DcMotor.class, "back_left");
@@ -76,6 +133,7 @@ public class DontRunIntoWalls  extends LinearOpMode {
             intake = hardwareMap.get(DcMotorEx.class, "intake");
             carousel = hardwareMap.get(DcMotorEx.class, "duck");
             front_tof = hardwareMap.get(Rev2mDistanceSensor.class, "front_tof");
+            mr_sensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "mr_sensor");
         } catch (IllegalArgumentException e) {
             telemetry.addLine("expansion hub not working");
             telemetry.update();
@@ -96,6 +154,12 @@ public class DontRunIntoWalls  extends LinearOpMode {
         parameters.loggingEnabled      = false;
         imu.initialize(parameters);
 
+        drive = new SampleMecanumDrive(hardwareMap);
+        map = new Map();
+
+        front_center_ultrasonic.setSensor(mr_sensor);
+        ultrasonicSensors.add(front_center_ultrasonic);
+
         // OpenCV begins here
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
@@ -111,6 +175,7 @@ public class DontRunIntoWalls  extends LinearOpMode {
             public void onOpened() {
                 // Usually this is where you'll want to start streaming from the camera (see section 4)
                 camera.startStreaming(1280, 720, OpenCvCameraRotation.UPRIGHT);
+                FtcDashboard.getInstance().startCameraStream(camera, 30);
                 telemetry.addLine("Camera stream initialized");
                 telemetry.update();
             }
@@ -123,11 +188,22 @@ public class DontRunIntoWalls  extends LinearOpMode {
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-        waitForStart();  // Wait for play button to be pressed
-        runtime.reset();
+
+        while (!isStarted() && !isStopRequested()) {
+            telemetry.addData("rev_light", front_tof.getDistance(DistanceUnit.CM));
+            telemetry.addData("mr_light: ", mr_sensor.cmOptical());
+            telemetry.addData("mr_ultrasonic: ", mr_sensor.cmUltrasonic());
+            telemetry.update();
+            sleep(250);
+        }
+        drive.setPoseEstimate(startPose);
 
         while (opModeIsActive()) {
-            double d = front_tof.getDistance(DistanceUnit.METER);
+            double d = front_tof.getDistance(DistanceUnit.METER); // FOV = 25 deg
+            double d1 = mr_sensor.getDistance(DistanceUnit.METER); // FOV = ? -maybe 15 deg
+            List<Double> readings = getSensorReadings(DistanceUnit.METER);
+            List<Pose2d> points = convertReadingsToPoints(readings);
+            map.addPoints(points);
             if (d < 1.00) {
                 setMotorPowerControllerVector(0, 0, 0.5);
                 sleep(500);
@@ -135,7 +211,11 @@ public class DontRunIntoWalls  extends LinearOpMode {
             } else {
                 setMotorPowerControllerVector(0, 0.5, 0);
             }
-            // Fill in with code for driving, turning using control loop
+            telemetry.addData("rev 2m tof: ", d);
+            telemetry.addData("modern robotics tof: ", d1);
+            telemetry.addData("pose: ", drive.getPoseEstimate());
+            telemetry.addData("Points: ", map.getPoints());
+            telemetry.update();
         }
     }
 

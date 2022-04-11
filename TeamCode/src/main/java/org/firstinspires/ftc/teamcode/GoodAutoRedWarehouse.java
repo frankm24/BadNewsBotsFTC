@@ -6,6 +6,7 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -29,6 +30,8 @@ import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
 
 import java.util.Arrays;
+
+import javax.xml.validation.SchemaFactory;
 
 @Autonomous
 public class GoodAutoRedWarehouse extends LinearOpMode {
@@ -147,6 +150,12 @@ public class GoodAutoRedWarehouse extends LinearOpMode {
             public void onOpened() {
                 // Usually this is where you'll want to start streaming from the camera (see section 4)
                 camera.startStreaming(1280, 720, OpenCvCameraRotation.UPRIGHT);
+                /*
+                OpenCV Camera resolution FPS Test :
+                    1280x720: 7.5 FPS
+                    640x360: 15 FPS
+                    bs slow piece of shit
+                 */
                 telemetry.addLine("Camera stream initialized");
                 telemetry.update();
             }
@@ -176,14 +185,12 @@ public class GoodAutoRedWarehouse extends LinearOpMode {
             case LEFT: {
                 // low
                 drive.setPoseEstimate(redStartPoseWarehouse);
-                sleep(10000);
                 drive.followTrajectorySequence(lowGoal);
                 requestOpModeStop();
             }
             case CENTER: {
                 // mid
                 drive.setPoseEstimate(redStartPoseWarehouse);
-                sleep(10000);
                 drive.followTrajectorySequence(midGoal);
                 arm.setPosition(0.5);
                 sleep(3000);
@@ -194,7 +201,6 @@ public class GoodAutoRedWarehouse extends LinearOpMode {
             case RIGHT: {
                 // up
                 drive.setPoseEstimate(redStartPoseWarehouse);
-                sleep(10000);
                 drive.followTrajectorySequence(highGoal);
                 arm.setPosition(0.5);
                 sleep(3000);
@@ -262,9 +268,9 @@ public class GoodAutoRedWarehouse extends LinearOpMode {
             CenterMat = filteredImage.submat(CenterRect);
             RightMat = filteredImage.submat(RightRect);
 
-            Imgproc.rectangle(firstFrame, LeftRect, red, 10);
-            Imgproc.rectangle(firstFrame, CenterRect, red, 10);
-            Imgproc.rectangle(firstFrame, RightRect, red, 10);
+            //Imgproc.rectangle(firstFrame, LeftRect, red, 10);
+            //Imgproc.rectangle(firstFrame, CenterRect, red, 10);
+            //Imgproc.rectangle(firstFrame, RightRect, red, 10);
 
             String fileName = Environment.getExternalStorageDirectory() + "/Pictures/image.png";
             Imgcodecs.imwrite(fileName, firstFrame);
