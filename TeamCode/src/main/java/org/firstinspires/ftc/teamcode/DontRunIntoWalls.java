@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
@@ -54,12 +55,14 @@ public class DontRunIntoWalls  extends LinearOpMode {
     private Rev2mDistanceSensor front_tof;
     private ModernRoboticsI2cRangeSensor mr_sensor;
 
-    UltrasonicSensor front_center_ultrasonic;
+    private UltrasonicSensor front_center_ultrasonic;
     private List<UltrasonicSensor> ultrasonicSensors;
-    List<Pose2d> initial_points;
+    private List<Pose2d> initial_points;
     private Map map;
 
-    SampleMecanumDrive drive;
+    private SampleMecanumDrive drive;
+
+    private FtcDashboard ftcDashboard;
 
     float SpeedMultiplier = 0.5f; //scale movement speed
     Pose2d startPose = new Pose2d();
@@ -141,6 +144,9 @@ public class DontRunIntoWalls  extends LinearOpMode {
         arm = hardwareMap.get(Servo.class, "arm");
         door = hardwareMap.get(Servo.class, "door");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
+
+        ftcDashboard = FtcDashboard.getInstance();
+        telemetry = ftcDashboard.getTelemetry();
 
         // Reverse the motors that runs backwards (LEFT SIDE)
         front_left.setDirection(DcMotor.Direction.REVERSE);
