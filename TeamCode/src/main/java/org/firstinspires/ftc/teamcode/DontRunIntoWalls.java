@@ -163,7 +163,7 @@ public class DontRunIntoWalls  extends LinearOpMode {
         drive = new SampleMecanumDrive(hardwareMap);
         map = new Map();
 
-        front_center_ultrasonic.setSensor(mr_sensor);
+        front_center_ultrasonic = new UltrasonicSensor(mr_sensor, new Pose2d());
         ultrasonicSensors.add(front_center_ultrasonic);
 
         // OpenCV begins here
@@ -205,9 +205,9 @@ public class DontRunIntoWalls  extends LinearOpMode {
         drive.setPoseEstimate(startPose);
 
         while (opModeIsActive()) {
-            double d = front_tof.getDistance(DistanceUnit.METER); // FOV = 25 deg
-            double d1 = mr_sensor.getDistance(DistanceUnit.METER); // FOV = ? -maybe 15 deg
-            List<Double> readings = getSensorReadings(DistanceUnit.METER);
+            double d = front_tof.getDistance(DistanceUnit.INCH); // FOV = 25 deg
+            double d1 = mr_sensor.getDistance(DistanceUnit.INCH); // FOV = ? -maybe 15 deg
+            List<Double> readings = getSensorReadings(DistanceUnit.INCH);
             List<Pose2d> points = convertReadingsToPoints(readings);
             map.addPoints(points);
             if (d < 1.00) {
