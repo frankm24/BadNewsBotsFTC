@@ -4,6 +4,7 @@ import android.os.Environment;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
@@ -12,9 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
@@ -32,6 +31,7 @@ import org.openftc.easyopencv.PipelineRecordingParameters;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 
 @Autonomous
 public class DontRunIntoWalls  extends LinearOpMode {
@@ -95,7 +95,7 @@ public class DontRunIntoWalls  extends LinearOpMode {
         }
         return readings;
     }
-    private List<Pose2d> convertReadingsToPoints(List<Double> readings) {
+    private List<Vector2d> convertReadingsToPoints(List<Double> readings) {
         /*
         if the sensor is facing forward, add reading to x
         if the sensor is facing right, add reading to y
@@ -104,7 +104,7 @@ public class DontRunIntoWalls  extends LinearOpMode {
          */
         Iterator<UltrasonicSensor> sensor_iter = ultrasonicSensors.iterator();
         Iterator<Double> readings_iter = readings.iterator();
-        List<Pose2d> points = new ArrayList<>();
+        List<Vector2d> points = new ArrayList<>();
         while (sensor_iter.hasNext() && readings_iter.hasNext()) {
             UltrasonicSensor sensor = sensor_iter.next();
             double reading = readings_iter.next();
@@ -121,7 +121,8 @@ public class DontRunIntoWalls  extends LinearOpMode {
             double sensor_heading = sensor.getPosition().getHeading();
             Pose2d reading_pose = new Pose2d(Math.cos(sensor_heading) * reading, Math.sin(sensor_heading) * reading);
             Pose2d point = drive.getPoseEstimate().plus(sensor.getPosition()).plus(reading_pose);
-            points.add(point);
+            Vector2d point_no_theta = new Vector2d(point.getX(), point.getY());
+            points.add(point_no_theta);
         }
         return points;
     }
@@ -146,7 +147,7 @@ public class DontRunIntoWalls  extends LinearOpMode {
         imu = hardwareMap.get(BNO055IMU.class, "imu");
 
         ftcDashboard = FtcDashboard.getInstance();
-        telemetry = ftcDashboard.getTelemetry();
+        //telemetry = ftcDashboard.getTelemetry();
 
         // Reverse the motors that runs backwards (LEFT SIDE)
         front_left.setDirection(DcMotor.Direction.REVERSE);
@@ -161,9 +162,10 @@ public class DontRunIntoWalls  extends LinearOpMode {
         imu.initialize(parameters);
 
         drive = new SampleMecanumDrive(hardwareMap);
-        map = new Map();
-
+        map = new Map(new ArrayList<>(), DistanceUnit.INCH, 0.1);
+        //15.25/2 + (1 + 15/16)
         front_center_ultrasonic = new UltrasonicSensor(mr_sensor, new Pose2d());
+        ultrasonicSensors = new ArrayList<>();
         ultrasonicSensors.add(front_center_ultrasonic);
 
         // OpenCV begins here
@@ -199,27 +201,36 @@ public class DontRunIntoWalls  extends LinearOpMode {
             telemetry.addData("rev_light", front_tof.getDistance(DistanceUnit.CM));
             telemetry.addData("mr_light: ", mr_sensor.cmOptical());
             telemetry.addData("mr_ultrasonic: ", mr_sensor.cmUltrasonic());
+            telemetry.addData("mr_inches: ", mr_sensor.getDistance(DistanceUnit.INCH));
             telemetry.update();
             sleep(250);
         }
         drive.setPoseEstimate(startPose);
 
+        Pose2d prev_pose = new Pose2d();
         while (opModeIsActive()) {
+            drive.updatePoseEstimate();
+            Pose2d current_pose = drive.getPoseEstimate();
+
             double d = front_tof.getDistance(DistanceUnit.INCH); // FOV = 25 deg
             double d1 = mr_sensor.getDistance(DistanceUnit.INCH); // FOV = ? -maybe 15 deg
+
             List<Double> readings = getSensorReadings(DistanceUnit.INCH);
-            List<Pose2d> points = convertReadingsToPoints(readings);
-            map.addPoints(points);
-            if (d < 1.00) {
+            if (!(prev_pose == current_pose)) {
+                List<Vector2d> points = convertReadingsToPoints(readings);
+                map.addPoints(points);
+            }
+            if (d1 < 10) {
                 setMotorPowerControllerVector(0, 0, 0.5);
                 sleep(500);
                 setMotorPowerControllerVector(0, 0,0);
             } else {
                 setMotorPowerControllerVector(0, 0.5, 0);
             }
-            telemetry.addData("rev 2m tof: ", d);
-            telemetry.addData("modern robotics tof: ", d1);
-            telemetry.addData("pose: ", drive.getPoseEstimate());
+
+            telemetry.addData("ultrasonic: ", d1);
+            telemetry.addData("prev. pose", prev_pose);
+            telemetry.addData("pose: ", current_pose);
             telemetry.addData("Points: ", map.getPoints());
             telemetry.update();
         }

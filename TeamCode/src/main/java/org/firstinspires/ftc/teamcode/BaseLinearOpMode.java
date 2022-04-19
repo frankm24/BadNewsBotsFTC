@@ -74,34 +74,6 @@ public class BaseLinearOpMode extends LinearOpMode {
     boolean startDebounce = false;
     double startDebounceTime = 0;
 
-
-    class InputLoop implements Runnable {
-        @Override
-        public void run() {
-            while (opModeIsActive()) {
-                idle();
-            }
-        }
-    }
-
-    class ActionLoop implements Runnable {
-        @Override
-        public void run() {
-            while (opModeIsActive()) {
-                idle();
-            }
-        }
-    }
-
-    public void waitWithoutSleep(double time) {
-        double t = getRuntime();
-        while (true) {
-            if (getRuntime() - t >= time) {
-                return;
-            }
-        }
-    }
-
     public void enableGamepadControl() {
         String LeftStickInputDirection = "";
         telemetry.addData("Left Stick Input Direction", LeftStickInputDirection);
@@ -276,7 +248,7 @@ public class BaseLinearOpMode extends LinearOpMode {
         WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
         camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
         camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED);
-        RecordingPipeline pipeline = new RecordingPipeline();
+        RecordingPipeline pipeline = new RecordingPipeline(camera);
         camera.setPipeline(pipeline);
         camera.setMillisecondsPermissionTimeout(3000); // Give plenty of time for the internal code to ready to avoid errors
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
@@ -303,37 +275,9 @@ public class BaseLinearOpMode extends LinearOpMode {
 
         sleep(5000);
         while (!isStarted() && !isStopRequested()) {
-            telemetry.addData("FPS: ", camera.getFps());
-            telemetry.addData("THEORETICAL MAX FPS: ", camera.getCurrentPipelineMaxFps());
-            telemetry.update();
-            sleep(250);
+            idle();
         }
-        //telemetry.addData("Status", "Initialized");
-        //telemetry.update();
-        //waitForStart();  // Wait for play button to be pressed
-        enableGamepadControl();
-    }
-    public class RecordingPipeline extends OpenCvPipeline {
-        final boolean record = false;
-
-        @Override
-        public Mat processFrame(Mat input) {
-            return input;
-        }
-
-        @Override
-        public void init(Mat input) {
-            if (record) {
-                camera.startRecordingPipeline(
-                        new PipelineRecordingParameters.Builder()
-                                .setBitrate(4, PipelineRecordingParameters.BitrateUnits.Mbps)
-                                .setEncoder(PipelineRecordingParameters.Encoder.H264)
-                                .setOutputFormat(PipelineRecordingParameters.OutputFormat.MPEG_4)
-                                .setFrameRate(30)
-                                .setPath(Environment.getExternalStorageDirectory() + "/pipeline_rec_" + ".mp4")
-                                .build());
-            }
-        }
+        // Code here
     }
 }
 
