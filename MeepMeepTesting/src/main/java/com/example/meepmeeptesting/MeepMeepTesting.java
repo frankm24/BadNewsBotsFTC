@@ -14,7 +14,7 @@ import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 import org.jetbrains.annotations.NotNull;
 
 public class MeepMeepTesting {
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(700);
         Pose2d redStartPoseWarehouse = new Pose2d(12, -62.25, Math.toRadians(90));
         Pose2d blueStartPoseWarehouse = new Pose2d(12, 62.25, Math.toRadians(-90));

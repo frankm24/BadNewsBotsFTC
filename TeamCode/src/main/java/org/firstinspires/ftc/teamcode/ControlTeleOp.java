@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import android.os.Environment;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -106,12 +107,6 @@ public class ControlTeleOp extends LinearOpMode {
     }
 
     public void enableGamepadControl() {
-        String LeftStickInputDirection = "";
-        telemetry.addData("Left Stick Input Direction", LeftStickInputDirection);
-        String RightStickInputDirection = "";
-        telemetry.addData("Right Stick Input Direction", RightStickInputDirection);
-        telemetry.update();
-
         while (opModeIsActive()) {
             float LeftStickY = -1 * gamepad1.left_stick_y * SpeedMultiplier;
             float LeftStickX = gamepad1.left_stick_x * SpeedMultiplier;
@@ -295,6 +290,7 @@ public class ControlTeleOp extends LinearOpMode {
                     480x360:
                  */
                 telemetry.addLine("Camera stream initialized");
+                FtcDashboard.getInstance().startCameraStream(camera, 30);
                 telemetry.update();
             }
             @Override
