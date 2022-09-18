@@ -1,12 +1,9 @@
 package badnewsbots.robots;
 
-import android.widget.CursorTreeAdapter;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
-import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -14,10 +11,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.openftc.easyopencv.OpenCvWebcam;
 
-public class RingBot {
+public class BeeLineChassis {
     // OOP
     OpMode opMode;
     HardwareMap hardwareMap;
@@ -28,19 +23,23 @@ public class RingBot {
     public DcMotor front_left;
     public DcMotor back_right;
     public DcMotor front_right;
-    // Mechanisms
-    public Servo pusher;
-    public DcMotorEx intake;
-    public DcMotorEx flywheel;
-    // Sensors
-    public BNO055IMU imu;
-    public Rev2mDistanceSensor front_tof;
-    public OpenCvWebcam camera;
-    // Other
-    public RevBlinkinLedDriver led_driver;
-    public WebcamName webcamName;
 
-    public RingBot(OpMode opMode) {
+    public BNO055IMU imu;
+
+    public DcMotorEx flywheel;
+    public Servo pusher;
+
+    /*
+    Mass of orange ring:
+    Trial 1: 30.8g
+    Trial 2: 30.9g
+    Trial 3:
+    Trial 4:
+    Trial 5:
+
+     */
+
+    public BeeLineChassis(OpMode opMode) {
         this.opMode = opMode;
         hardwareMap = opMode.hardwareMap;
         telemetry = opMode.telemetry;
@@ -56,17 +55,11 @@ public class RingBot {
         front_left = hardwareMap.get(DcMotor.class, "front_left");
         back_right = hardwareMap.get(DcMotor.class, "back_right");
         front_right = hardwareMap.get(DcMotor.class, "front_right");
-        //led_driver = hardwareMap.get(RevBlinkinLedDriver.class, "led_driver");
-        try {
-            intake = hardwareMap.get(DcMotorEx.class, "intake");
-            flywheel = hardwareMap.get(DcMotorEx.class, "duck");
-            front_tof = hardwareMap.get(Rev2mDistanceSensor.class, "front_tof");
-        } catch (Exception e) {
-            telemetry.addLine("Expansion hub not working.");
-        }
-        pusher = hardwareMap.get(Servo.class, "pusher");
-        flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
+
         imu = hardwareMap.get(BNO055IMU.class, "imu");
+
+        flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
+        pusher = hardwareMap.get(Servo.class, "pusher");
 
         // Reverse the motors that runs backwards (LEFT SIDE)
         front_left.setDirection(DcMotor.Direction.REVERSE);

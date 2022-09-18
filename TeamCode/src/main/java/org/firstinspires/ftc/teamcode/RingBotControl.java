@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamClient;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
@@ -23,6 +24,7 @@ import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraException;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
+import org.openftc.easyopencv.OpenCvInternalCamera2;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
 import org.openftc.easyopencv.PipelineRecordingParameters;
@@ -30,6 +32,7 @@ import org.openftc.easyopencv.PipelineRecordingParameters;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.TimeUnit;
 
 import badnewsbots.hardware.GamepadEx;
 import badnewsbots.robots.RingBot;
@@ -161,6 +164,11 @@ public class RingBotControl extends LinearOpMode {
         RecordingPipeline pipeline = new RecordingPipeline();
         ringBot.camera.setPipeline(pipeline);
         ringBot.camera.setMillisecondsPermissionTimeout(3000); // Give plenty of time for the internal code to ready to avoid errors
+        /*
+        ExposureControl exposureControl = ringBot.camera.getExposureControl();
+        exposureControl.setMode(ExposureControl.Mode.Manual);
+        exposureControl.setExposure(1/30, TimeUnit.SECONDS);
+        */
         ringBot.camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
             @Override
