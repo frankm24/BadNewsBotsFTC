@@ -36,7 +36,7 @@ public class BeeLineTeleOp extends LinearOpMode {
     int flywheelTargetSpeed = 1000;
     boolean flywheelOn = false;
 
-    public enum PusherState {
+    enum PusherState {
         IN,
         MOVING_OUT,
         OUT,
