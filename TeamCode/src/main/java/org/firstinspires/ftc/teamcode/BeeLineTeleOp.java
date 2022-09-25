@@ -114,6 +114,7 @@ public class BeeLineTeleOp extends LinearOpMode {
             } else {
                 robot.flywheel.setVelocity(0);
             }
+
             double front_leftPower = LeftStickY - RightStickX;
             double back_leftPower = LeftStickY - RightStickX;
             double front_rightPower = LeftStickY + RightStickX;
