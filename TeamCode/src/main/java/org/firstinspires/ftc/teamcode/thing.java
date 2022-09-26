@@ -6,10 +6,22 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 @TeleOp
 public class thing extends LinearOpMode {
-    private DcMotor motor;
+    private DcMotor backRight;
+    private DcMotor backLeft;
+    private DcMotor frontRight;
+    private DcMotor frontLeft;
+    private DcMotor flywheel;
     public void runOpMode() {
-        motor = hardwareMap.get(DcMotor.class,"back_right");
+        backRight = hardwareMap.get(DcMotor.class,"back_right");
+        backLeft = hardwareMap.get(DcMotor.class,"back_left");
+        frontRight = hardwareMap.get(DcMotor.class,"front_right");
+        frontLeft = hardwareMap.get(DcMotor.class,"front_left");
+        flywheel = hardwareMap.get(DcMotor.class,"flywheel");
         waitForStart();
-        motor.setPower(0.2);
+        powerFlywheel(1,10000);
+    }
+    public void powerFlywheel(double power,long duration) {
+        flywheel.setPower(power);
+        sleep(duration);
     }
 }
