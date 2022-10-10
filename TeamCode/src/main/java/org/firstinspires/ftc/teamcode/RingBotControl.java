@@ -4,35 +4,23 @@ import android.os.Environment;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.stream.CameraStreamClient;
-import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
 import org.opencv.core.Mat;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraException;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvInternalCamera2;
 import org.openftc.easyopencv.OpenCvPipeline;
-import org.openftc.easyopencv.OpenCvWebcam;
 import org.openftc.easyopencv.PipelineRecordingParameters;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.TimeUnit;
 
 import badnewsbots.hardware.GamepadEx;
 import badnewsbots.robots.RingBot;
@@ -144,7 +132,6 @@ public class RingBotControl extends LinearOpMode {
             telemetry.addData("IMU Data", ringBot.imu.getAngularOrientation());
             telemetry.addData("front_tof: ", ringBot.front_tof.getDistance(DistanceUnit.INCH));
             telemetry.update();
-            smartGamepad.postUpdate();
             prevTime = currentTime;
         }
     }

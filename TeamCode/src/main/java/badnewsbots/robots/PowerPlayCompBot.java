@@ -1,6 +1,5 @@
 package badnewsbots.robots;
 
-import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
@@ -14,12 +13,12 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import badnewsbots.slam.UltrasonicSensor;
+import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvWebcam;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class AutonomousTestingBot {
+public class PowerPlayCompBot {
     // OOP
     OpMode opMode;
     HardwareMap hardwareMap;
@@ -31,24 +30,15 @@ public class AutonomousTestingBot {
     public DcMotor back_right;
     public DcMotor front_right;
 
-    // Mechanisms
-    public Servo pusher;
-
     // Sensors
     public BNO055IMU imu;
-    public Rev2mDistanceSensor front_tof;
-    public ModernRoboticsI2cRangeSensor mr_sensor;
     public OpenCvWebcam camera;
     public SampleMecanumDrive drive;
-
-    //Sensor OOP
-    public UltrasonicSensor front_center_ultrasonic;
-    public List<UltrasonicSensor> ultrasonicSensors;
 
     // Other
     public WebcamName webcamName;
 
-    public AutonomousTestingBot(OpMode opMode) {
+    public PowerPlayCompBot(OpMode opMode) {
         this.opMode = opMode;
         hardwareMap = opMode.hardwareMap;
         telemetry = opMode.telemetry;
@@ -60,21 +50,19 @@ public class AutonomousTestingBot {
         for (LynxModule module : hardwareMap.getAll( LynxModule.class ) )
             module.setBulkCachingMode( LynxModule.BulkCachingMode.AUTO );
 
-        back_left = hardwareMap.get(DcMotor.class, "back_left");
-        front_left = hardwareMap.get(DcMotor.class, "front_left");
-        back_right = hardwareMap.get(DcMotor.class, "back_right");
-        front_right = hardwareMap.get(DcMotor.class, "front_right");
-        try {
-            front_tof = hardwareMap.get(Rev2mDistanceSensor.class, "front_tof");
-            mr_sensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "mr_sensor");
-        } catch (Exception e) {
-            telemetry.addLine("Expansion hub not working.");
-        }
+        //back_left = hardwareMap.get(DcMotor.class, "back_left");
+        //front_left = hardwareMap.get(DcMotor.class, "front_left");
+        //back_right = hardwareMap.get(DcMotor.class, "back_right");
+        //front_right = hardwareMap.get(DcMotor.class, "front_right");
+
         imu = hardwareMap.get(BNO055IMU.class, "imu");
 
+        webcamName = hardwareMap.get(WebcamName.class, "Webcam 1" );
+        camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName);
+
         // Reverse the motors that runs backwards (LEFT SIDE)
-        front_left.setDirection(DcMotor.Direction.REVERSE);
-        back_left.setDirection(DcMotor.Direction.REVERSE);
+        //front_left.setDirection(DcMotor.Direction.REVERSE);
+        //back_left.setDirection(DcMotor.Direction.REVERSE);
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
 
@@ -85,10 +73,6 @@ public class AutonomousTestingBot {
         imu.initialize(parameters);
 
         drive = new SampleMecanumDrive(hardwareMap);
-
-        front_center_ultrasonic = new UltrasonicSensor(mr_sensor, new Pose2d());
-        ultrasonicSensors = new ArrayList<>();
-        ultrasonicSensors.add(front_center_ultrasonic);
     }
     public void setDriveMotorPowerControllerVector(double LeftStickX, double LeftStickY, double RightStickX, double speedMultiplier) {
         LeftStickX *= speedMultiplier;

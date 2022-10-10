@@ -23,7 +23,7 @@ public class ServoTest extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             telemetry.addData("Servo pos", servo.getPosition());
             telemetry.update();
-            sleep(200);
+            sleep(250);
         }
 
     }

@@ -10,6 +10,7 @@ public class thing extends LinearOpMode {
     public void runOpMode() {
         motor = hardwareMap.get(DcMotor.class,"back_right");
         waitForStart();
-        motor.setPower(0.2);
+        motor.setPower(1);
+        sleep(10000);
     }
 }

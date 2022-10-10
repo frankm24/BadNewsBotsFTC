@@ -5,16 +5,12 @@ import android.os.Environment;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.ConceptTensorFlowObjectDetectionWebcam;
-import org.firstinspires.ftc.robotcontroller.external.samples.ConceptVuforiaDriveToTargetWebcam;
-import org.firstinspires.ftc.robotcontroller.external.samples.ConceptVuforiaFieldNavigationWebcam;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
 
 public class FTC_TFLiteObjectDetector {
     private static final String VUFORIA_KEY = "AS27DuH/////AAABmTCx7YbI4khghC3lgWAjQo93WEllOCIMXs6D+me71rAjot43I8SxjF0AYT+65Zeuc+9biDnuDpRCjKWAoAa+YIwr/0BG+SXWuYWE3M/rsiwaiDE2UrkFnNVwAHHAClTI4lEEzY83m4wtLSrawB2q/OXrZ5oZNd3Pdf3gZHpv7S9QXEGpPxB8Rvwgi1rieSQIg0X2BBR1JSYRDVibN9Pymw8i/1CihRk3d84+bmlKXB9xxD9SPZgx2VRUQGFldkEllKapArv/k495zE5SKnYF6AYoYUTEx1ayO8Hrh/Ae3W7xuOc0GL7CB395oVdyamnhZrZ9zg7rGglSaYg3Fcz3aeA06OahIrcHXVB4X6Jg2Xcp";

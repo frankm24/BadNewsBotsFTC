@@ -1,4 +1,4 @@
-package badnewsbots.pipelines;
+package badnewsbots.ml;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfFloat;
@@ -15,7 +15,6 @@ import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;

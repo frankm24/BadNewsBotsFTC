@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.slam;
+package badnewsbots.slam;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 

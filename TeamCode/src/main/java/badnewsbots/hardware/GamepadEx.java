@@ -108,6 +108,23 @@ public class GamepadEx {
 
     // Call this method at the START of the loop.
     public void update() {
+        a_prev = a;
+        b_prev = b;
+        x_prev = x;
+        y_prev = y;
+        dpad_right_prev = dpad_right;
+        dpad_up_prev = dpad_up;
+        dpad_left_prev = dpad_left;
+        dpad_down_prev = dpad_down;
+        start_prev = start;
+        back_prev = back;
+        left_bumper_prev = left_bumper;
+        right_bumper_prev = right_bumper;
+        left_trigger_bool_prev = left_trigger_bool;
+        right_trigger_bool_prev = right_trigger_bool;
+        left_stick_button_prev = left_stick_button;
+        right_stick_button_prev = right_stick_button;
+
         a = gamepad.a;
         b = gamepad.b;
         x = gamepad.x;
@@ -164,25 +181,5 @@ public class GamepadEx {
         right_trigger_released = right_trigger_bool_prev && !right_trigger_bool;
         left_stick_button_released = left_stick_button_prev && !left_stick_button;
         right_stick_button_released = right_stick_button_prev && !right_stick_button;
-    }
-    // This method overwrites the data from the previous frame to the current values
-    // Only call this method at the END of the loop, or when you do no longer need to access data from the previous frame.
-    public void postUpdate() {
-        a_prev = a;
-        b_prev = b;
-        x_prev = x;
-        y_prev = y;
-        dpad_right_prev = dpad_right;
-        dpad_up_prev = dpad_up;
-        dpad_left_prev = dpad_left;
-        dpad_down_prev = dpad_down;
-        start_prev = start;
-        back_prev = back;
-        left_bumper_prev = left_bumper;
-        right_bumper_prev = right_bumper;
-        left_trigger_bool_prev = left_trigger_bool;
-        right_trigger_bool_prev = right_trigger_bool;
-        left_stick_button_prev = left_stick_button;
-        right_stick_button_prev = right_stick_button;
     }
 }
