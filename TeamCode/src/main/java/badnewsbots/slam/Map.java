@@ -1,26 +1,16 @@
-package org.firstinspires.ftc.teamcode.slam;
-
-import android.media.Image;
+package badnewsbots.slam;
 
 import com.acmerobotics.roadrunner.geometry.Vector2d;
-import com.vuforia.Vec2F;
 
-import org.apache.commons.math3.stat.descriptive.moment.VectorialCovariance;
-import org.checkerframework.checker.units.qual.min;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDMatch;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
 import java.util.List;
 
 

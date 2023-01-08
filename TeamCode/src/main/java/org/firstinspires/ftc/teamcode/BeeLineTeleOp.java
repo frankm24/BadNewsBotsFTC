@@ -1,53 +1,33 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.os.Environment;
-
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.acmerobotics.roadrunner.drive.TankDrive;
-import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.opencv.core.Mat;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraException;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvPipeline;
-import org.openftc.easyopencv.PipelineRecordingParameters;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.ListIterator;
-
 import badnewsbots.hardware.GamepadEx;
 import badnewsbots.robots.BeeLineChassis;
-import badnewsbots.robots.RingBot;
 
 @TeleOp
 public class BeeLineTeleOp extends LinearOpMode {
     // Robot object
-    BeeLineChassis robot;
+    private BeeLineChassis robot;
 
-    float SpeedMultiplier = 1.0f; // scale movement speed
-    int flywheelTargetSpeed = 1000;
-    boolean flywheelOn = false;
+    private float SpeedMultiplier = 1.0f; // scale movement speed
+    private int flywheelTargetSpeed = 1000;
+    private boolean flywheelOn = false;
 
-    public enum PusherState {
+    private enum PusherState {
         IN,
         MOVING_OUT,
         OUT,
         MOVING_IN
     }
-    PusherState pusherState = PusherState.IN;
-    double pusherTime = 0;
+    private PusherState pusherState = PusherState.IN;
+    private double pusherTime = 0;
 
-    FtcDashboard ftcDashboard;
+    private FtcDashboard ftcDashboard;
 
-    GamepadEx smartGamepad;
+    private GamepadEx smartGamepad;
 
     public void mainLoop() {
         double prevTime = 0;
@@ -68,19 +48,10 @@ public class BeeLineTeleOp extends LinearOpMode {
                 }
             }
             // In case the flywheel defaults to the wrong direction :)
-            if (smartGamepad.y_pressed) {
-                flywheelTargetSpeed *= -1;
-            }
-
+            if (smartGamepad.y_pressed) {flywheelTargetSpeed *= -1;}
             if (smartGamepad.dpad_up_pressed) {flywheelTargetSpeed += 500;}
             if (smartGamepad.dpad_down_pressed) {flywheelTargetSpeed -= 500;}
-            if (smartGamepad.a_pressed) {
-                if (!flywheelOn) {
-                    flywheelOn = true;
-                } else {
-                    flywheelOn = false;
-                }
-            }
+            if (smartGamepad.a_pressed) {flywheelOn = !flywheelOn;}
             if (smartGamepad.right_trigger_pressed) {
                 telemetry.addLine("right trigger pressed");
                 if (pusherState == PusherState.IN) {
@@ -132,7 +103,6 @@ public class BeeLineTeleOp extends LinearOpMode {
             telemetry.addData("Control step time: ", deltaTime);
             telemetry.addData("IMU Data", robot.imu.getAngularOrientation());
             telemetry.update();
-            smartGamepad.postUpdate();
             prevTime = currentTime;
         }
     }

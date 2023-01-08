@@ -3,7 +3,6 @@ package badnewsbots.robots;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -48,8 +47,8 @@ public class BeeLineChassis {
     private void init() {
         // Enables automatic "bulk reads" from robot hardware, so multiple .get()'s on hardware
         // Should improve performance significantly, since hardwareMap read calls take 2ms each
-        for (LynxModule module : hardwareMap.getAll( LynxModule.class ) )
-            module.setBulkCachingMode( LynxModule.BulkCachingMode.AUTO );
+        for (LynxModule module : hardwareMap.getAll(LynxModule.class))
+            module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
 
         back_left = hardwareMap.get(DcMotor.class, "back_left");
         front_left = hardwareMap.get(DcMotor.class, "front_left");

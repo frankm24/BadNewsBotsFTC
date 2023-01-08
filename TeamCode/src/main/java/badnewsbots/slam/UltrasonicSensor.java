@@ -1,12 +1,7 @@
-package org.firstinspires.ftc.teamcode.slam;
-
-import android.hardware.Sensor;
+package badnewsbots.slam;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class UltrasonicSensor {
     private ModernRoboticsI2cRangeSensor sensor;

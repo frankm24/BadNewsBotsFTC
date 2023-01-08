@@ -23,5 +23,6 @@ public class thing extends LinearOpMode {
     public void powerFlywheel(double power,long duration) {
         flywheel.setPower(power);
         sleep(duration);
+        flywheel.setPower(0);
     }
 }
