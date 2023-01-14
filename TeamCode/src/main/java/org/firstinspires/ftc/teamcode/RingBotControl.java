@@ -31,7 +31,7 @@ public class RingBotControl extends LinearOpMode {
     RingBot ringBot;
 
     // Settings
-    int flywheelTargetSpeed = 1000;
+    int flywheelTargetSpeed = 1000; // ticks/sec
     float SpeedMultiplier = 1.0f; // scale movement speed
 
     FtcDashboard ftcDashboard;

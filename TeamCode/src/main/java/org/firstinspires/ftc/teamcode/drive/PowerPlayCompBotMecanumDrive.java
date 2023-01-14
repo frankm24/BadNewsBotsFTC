@@ -55,7 +55,7 @@ import java.util.List;
  * Simple mecanum drive hardware implementation for REV hardware.
  */
 @Config
-public class SampleMecanumDrive extends MecanumDrive {
+public class PowerPlayCompBotMecanumDrive extends MecanumDrive {
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(8, 0, 0);
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(8, 0, 0);
 
@@ -78,7 +78,7 @@ public class SampleMecanumDrive extends MecanumDrive {
     private BNO055IMU imu;
     private VoltageSensor batteryVoltageSensor;
 
-    public SampleMecanumDrive(HardwareMap hardwareMap) {
+    public PowerPlayCompBotMecanumDrive(HardwareMap hardwareMap) {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
 
         follower = new HolonomicPIDVAFollower(TRANSLATIONAL_PID, TRANSLATIONAL_PID, HEADING_PID,
@@ -316,27 +316,5 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     public static TrajectoryAccelerationConstraint getAccelerationConstraint(double maxAccel) {
         return new ProfileAccelerationConstraint(maxAccel);
-    }
-    
-    public void setDriveMotorPowerControllerVector(double LeftStickX, double LeftStickY, double RightStickX, double speedMultiplier) {
-        LeftStickX *= speedMultiplier;
-        LeftStickY *= speedMultiplier;
-        RightStickX *= speedMultiplier;
-        double denominator = Math.max(Math.abs(LeftStickY) + Math.abs(LeftStickX) + Math.abs(RightStickX), 1);
-        double front_leftPower = (LeftStickY + LeftStickX + RightStickX) / denominator;
-        double back_leftPower = (LeftStickY - LeftStickX + RightStickX) / denominator;
-        double front_rightPower = (LeftStickY - LeftStickX - RightStickX) / denominator;
-        double back_rightPower = (LeftStickY + LeftStickX - RightStickX) / denominator;
-        leftFront.setPower(front_leftPower);
-        leftRear.setPower(back_leftPower);
-        rightFront.setPower(front_rightPower);
-        rightRear.setPower(back_rightPower);
-    }
-    
-    public void setAllDriveMotorsPower(double power) {
-        leftFront.setPower(power);
-        rightFront.setPower(power);
-        leftRear.setPower(power);
-        rightRear.setPower(power);
     }
 }
