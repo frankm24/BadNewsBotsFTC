@@ -18,10 +18,10 @@ import badnewsbots.robots.PowerPlayCompBot;
 @TeleOp
 public class PowerPlayTeleOp extends LinearOpMode {
     // Robot object
-    PowerPlayCompBot bot;
+    private PowerPlayCompBot robot;
 
     // Settings
-    float SpeedMultiplier = 1.0f; // scale movement speed
+    private float SpeedMultiplier = 1.0f; // scale movement speed
 
     private GamepadEx smartGamepad;
     private FtcDashboard ftcDashboard;
@@ -76,16 +76,17 @@ public class PowerPlayTeleOp extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        bot = new PowerPlayCompBot(this);
-        drive = bot.getDrive();
-        camera = bot.getCamera();
-        claw = bot.getRotatingClaw();
+        robot = new PowerPlayCompBot(this);
+        drive = robot.getDrive();
+        camera = robot.getCamera();
+        claw = robot.getRotatingClaw();
         smartGamepad = new GamepadEx(gamepad1);
         ftcDashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, ftcDashboard.getTelemetry());
         //telemetry.setMsTransmissionInterval(17);
 
         // OpenCV begins here
+
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
         camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
@@ -96,10 +97,12 @@ public class PowerPlayTeleOp extends LinearOpMode {
         // init loop
         while (!isStarted() && !isStopRequested()) {
             telemetry.addData("Status: ", "Initialized");
+
             if (recorder.isRecording()) {
                 telemetry.addData("Recording FPS: ", camera.getFps());
                 telemetry.addData("Theoretical Max FPS: ", camera.getCurrentPipelineMaxFps());
             }
+
             telemetry.update();
             idle();
         }

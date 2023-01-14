@@ -20,7 +20,6 @@ public class LinearSlide {
         else {
             encoderDirection = 1;}
         //motor.setTargetPositionTolerance(0); // test if works once it works normally
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     // Tell the slide to move to a given position in ticks
@@ -28,6 +27,7 @@ public class LinearSlide {
         positionTicks = Math.max(0, Math.min(positionTicks, LENGTH_TICKS));
         motor.setTargetPosition(encoderDirection * positionTicks);
         motor.setPower(1);
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public void incrementPositionTicks(int amount) {
