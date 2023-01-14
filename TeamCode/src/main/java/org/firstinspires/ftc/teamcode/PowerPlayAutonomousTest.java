@@ -1,12 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.os.Environment;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.opencv.imgcodecs.Imgcodecs;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraException;
 import org.openftc.easyopencv.OpenCvPipeline;
@@ -23,22 +20,23 @@ public class PowerPlayAutonomousTest extends LinearOpMode {
     private PowerPlayCompBot robot;
     private GamepadEx smartGamepad;
     private FtcDashboard ftcDashboard;
-    private SignalSleevePipeline pipeline;
     private SignalSleevePipeline.ConeOrientation coneOrientation;
     private double[] colorFilterAverages;
 
+    private OpenCvCamera camera;
+
     private void initOpenCV(OpenCvPipeline pipeline) {
-        robot.camera.setPipeline(pipeline);
-        robot.camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED);
-        robot.camera.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
-        robot.camera.showFpsMeterOnViewport(true);
-        robot.camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
+        camera.setPipeline(pipeline);
+        camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED);
+        camera.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
+        //camera.showFpsMeterOnViewport(true);
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {
                 ftcDashboard.getTelemetry().addLine("Camera stream initialized");
                 telemetry.update();
-                robot.camera.startStreaming(640, 480);
-                ftcDashboard.startCameraStream(robot.camera, 30);
+                camera.startStreaming(640, 480);
+                ftcDashboard.startCameraStream(camera, 30);
             }
             @Override
             public void onError(int errorCode) {
@@ -50,10 +48,11 @@ public class PowerPlayAutonomousTest extends LinearOpMode {
     @Override
     public void runOpMode() {
         robot = new PowerPlayCompBot(this);
+        camera = robot.getCamera();
         smartGamepad = new GamepadEx(gamepad1);
         ftcDashboard = FtcDashboard.getInstance();
 
-        pipeline = new SignalSleevePipeline();
+        SignalSleevePipeline pipeline = new SignalSleevePipeline();
         initOpenCV(pipeline);
 
         while (!isStarted() && !isStopRequested()) {
@@ -62,7 +61,7 @@ public class PowerPlayAutonomousTest extends LinearOpMode {
             telemetry.addData("Status: ", "Initialized");
             telemetry.addData("Cone filter averages: (G, M, O)", Arrays.toString(colorFilterAverages));
             telemetry.addData("Cone orientation: ", coneOrientation);
-            telemetry.addData("FPS: ", robot.camera.getFps());
+            telemetry.addData("FPS: ", camera.getFps());
             telemetry.update();
             idle();
         }

@@ -1,6 +1,7 @@
 package com.example.meepmeeptesting;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.MarkerCallback;
 import com.noahbres.meepmeep.MeepMeep;
 import com.noahbres.meepmeep.core.colorscheme.scheme.ColorSchemeRedDark;
@@ -11,7 +12,16 @@ public class MeepMeepTesting {
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(700);
 
-        Pose2d redStartPose = new Pose2d(35.5, -61.8, Math.toRadians(90));
+        /*
+        robot length: 15 in.
+        robot width: 14.6 in.
+         */
+
+        float robotLength = 15.0f;
+        float robotWidth = 14.6f;
+        float tileSize = 24.0f;
+
+        Pose2d redStartPose = new Pose2d(-(1.5 * tileSize), 72 - robotWidth/2, Math.toRadians(180));
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
@@ -19,11 +29,20 @@ public class MeepMeepTesting {
                 .setDimensions(13.25, 16.5)
                 // Enter traj seq. to follow
                 .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(redStartPose)
-                        .waitSeconds(2)
+                        .forward(tileSize)
                         .addTemporalMarker(() -> {
+                            // release cone
                         })
-                        .forward(12)
-                        .waitSeconds(4)
+                        .back(5)
+                        .lineTo(new Vector2d( -2.5*tileSize + 5, tileSize/2))
+                        .forward(6)
+                        .addTemporalMarker(() -> {
+                            // pick up next cone
+                            // tell linear mechanism to begin moving up, rotating as necessary
+                        })
+                        .setReversed(true)
+                        .splineTo(new Vector2d(-1.5*tileSize + 7, 8), Math.toRadians(-55))
+                        .setReversed(false)
                         .build()
                 );
         meepMeep.setBackground(MeepMeep.Background.FIELD_POWERPLAY_KAI_DARK)
@@ -33,65 +52,4 @@ public class MeepMeepTesting {
                 .addEntity(myBot)
                 .start();
     }
-    // FREIGHT FRENZY
-    //        Pose2d redStartPoseWarehouse = new Pose2d(12, -62.25, Math.toRadians(90));
-    //        Pose2d blueStartPoseWarehouse = new Pose2d(12, 62.25, Math.toRadians(-90));
-    //        Pose2d redStartPoseCarousel = new Pose2d(-35, -62.25, Math.toRadians(90));
-    /*
-                        drive.trajectorySequenceBuilder(redStartPose)
-                                .strafeLeft(23.75)
-                                .forward(14.5)
-                                .addTemporalMarker(0, () -> {
-                                    System.out.println("door 0");
-                                })
-                                .addTemporalMarker(0.1, () -> {
-                                    System.out.println("arm 0.7");
-                                })
-                                .addTemporalMarker(2.5, () -> {
-                                    System.out.println("door 0.65");
-                                })
-                                .waitSeconds(1)
-                                .lineToSplineHeading(new Pose2d(12, -47.75, Math.toRadians(180)))
-                                .back(48)
-                                .build()
-                         */
-    /*
-                        .strafeRight(23.75)
-                                .forward(14.5)
-                                .addTemporalMarker(0, () -> {
-                                    System.out.println("door 0");
-                                })
-                                .addTemporalMarker(0.1, () -> {
-                                    System.out.println("arm 0.7");
-                                })
-                                .addTemporalMarker(2.5, () -> {
-                                    System.out.println("door 0.65");
-                                })
-                                .waitSeconds(1)
-                                .lineToSplineHeading(new Pose2d(12, 47.75, Math.toRadians(0)))
-                                .forward(48)
-                                .build()
-                         */
-    /*
-                        drive.trajectorySequenceBuilder(redStartPoseCarousel)
-                                .strafeRight(23.75)
-                                .forward(14.5)
-                                .addTemporalMarker(0, () -> {
-                                    System.out.println("door 0");
-                                })
-                                .addTemporalMarker(0.1, () -> {
-                                    System.out.println("arm 0.8");
-                                })
-                                .addTemporalMarker(2.5, () -> {
-                                    System.out.println("door 0.65");
-                                })
-                                .waitSeconds(1)
-                                .addTemporalMarker(4, () -> {
-                                    System.out.println("arm 0.2");
-                                })
-                                .lineToSplineHeading(new Pose2d(-58, -58, Math.toRadians(180)))
-                                .waitSeconds(3)
-                                .strafeRight(24)
-                                .build()
-                         */
 }

@@ -246,7 +246,6 @@ public class DontRunIntoWalls extends LinearOpMode {
             telemetry.addData("pose: ", current_pose);
 
             telemetry.update();
-            smartGamepad.postUpdate();
         }
         // Code after stop requested
         if (isStopRequested()) {

@@ -23,7 +23,7 @@ public class SignalSleevePipeline extends OpenCvPipeline {
         NONE
     }
 
-    private volatile ConeOrientation coneOrientation = ConeOrientation.NONE;
+    private ConeOrientation coneOrientation = ConeOrientation.NONE;
 
     private final Scalar greenMin = new Scalar(45, 100, 100);
     private final Scalar greenMax = new Scalar(70, 255, 255);
