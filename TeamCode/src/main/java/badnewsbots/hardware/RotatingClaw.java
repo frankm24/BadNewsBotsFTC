@@ -35,9 +35,9 @@ public class RotatingClaw {
     private final Servo wristServo;
     private final LinearSlide linearSlide1;
     private final LinearSlide linearSlide2;
-    private final double frontPosition = 0;
-    private final double backPosition = 0;
-    private final double grippingPosition = 0.9;
+    private final double frontPosition = 1;
+    private final double backPosition = 0.4;
+    private final double grippingPosition = 0.3;
     private final double openPosition = 0;
     private final int slideIncrementAmount = 1;
 
@@ -82,19 +82,30 @@ public class RotatingClaw {
 
     // Grip if ungripped, ungrip if gripped
     public void toggleGrip() {
-        if (currentGripperState == GripperState.GRIPPED) {release();}
+        if (currentGripperState == GripperState.GRIPPED) {
+            release();
+            currentGripperState = GripperState.RELEASED;
+        }
         else if (currentGripperState == GripperState.RELEASED) {
-            grip();}
+            currentGripperState = GripperState.GRIPPED;
+            grip();
+        }
     }
 
     public void rotateToSide(Side side) {
         currentSide = side;
-        if (side == Side.FRONT) {wristServo.setPosition(frontPosition);}
-        else if (side == Side.BACK) {wristServo.setPosition(backPosition);}
+        if (side == Side.FRONT) {
+            wristServo.setPosition(frontPosition);
+        }
+        else if (side == Side.BACK) {
+            wristServo.setPosition(backPosition);
+        }
     }
 
     public void rotateToOtherSide() {
-        if (currentSide == Side.FRONT) {rotateToSide(Side.BACK);}
+        if (currentSide == Side.FRONT) {
+            rotateToSide(Side.BACK);
+        }
         else if (currentSide == Side.BACK) {rotateToSide(Side.FRONT);}
     }
 

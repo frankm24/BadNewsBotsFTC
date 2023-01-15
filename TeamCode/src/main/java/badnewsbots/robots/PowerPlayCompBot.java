@@ -38,26 +38,12 @@ public class PowerPlayCompBot {
         this.opMode = opMode;
         hardwareMap = opMode.hardwareMap;
         telemetry = opMode.telemetry;
-        init();
-    }
-
-    private void init() {
         // Enables automatic "bulk reads" from robot hardware, so multiple .get()'s on hardware
         // Should improve performance significantly, since hardwareMap read calls take 2ms each
         for (LynxModule module : hardwareMap.getAll( LynxModule.class ) )
             module.setBulkCachingMode( LynxModule.BulkCachingMode.AUTO );
 
-        //back_left = hardwareMap.get(DcMotor.class, "back_left");
-        //front_left = hardwareMap.get(DcMotor.class, "front_left");
-        //back_right = hardwareMap.get(DcMotor.class, "back_right");
-        //front_right = hardwareMap.get(DcMotor.class, "front_right");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
-        webcamName = hardwareMap.get(WebcamName.class, "Webcam 1" );
-        camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName);
-
-        // Reverse the motors that runs backwards (LEFT SIDE)
-        //front_left.setDirection(DcMotor.Direction.REVERSE);
-        //back_left.setDirection(DcMotor.Direction.REVERSE);
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
 
@@ -70,15 +56,14 @@ public class PowerPlayCompBot {
         drive = new PowerPlayCompBotMecanumDrive(hardwareMap);
 
         rotatingClaw = new RotatingClaw(hardwareMap, telemetry);
+        webcamName = hardwareMap.get(WebcamName.class, "Webcam 1" );
+        camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName);
+        telemetry.addLine("Robot object created");
+        telemetry.update();
     }
 
-    public PowerPlayCompBotMecanumDrive getDrive() {return drive; }
+    public PowerPlayCompBotMecanumDrive getDrive() {return drive;}
     public OpenCvWebcam getCamera() {return camera;}
     public RotatingClaw getRotatingClaw() {return rotatingClaw;}
-
-
-    // servo position:
-    // open = 0.00
-    // closed = 0.09
 
 }
