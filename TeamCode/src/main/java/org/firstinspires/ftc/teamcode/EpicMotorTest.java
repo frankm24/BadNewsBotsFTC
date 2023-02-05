@@ -10,7 +10,7 @@ import java.util.List;
 
 import badnewsbots.hardware.GamepadEx;
 
-@TeleOp
+@TeleOp(group = "Testing")
 public class EpicMotorTest extends LinearOpMode {
     private DcMotorEx motor;
     private DcMotorEx motor1;
@@ -25,14 +25,15 @@ public class EpicMotorTest extends LinearOpMode {
     }
     private TestMode currentTestMode;
 
-    private final int minTicks = -3251;
+    private final int minTicks = 100;
+    private final int maxTicks = 3251;
 
     @Override
     public void runOpMode() {
         smartGamepad = new GamepadEx(gamepad1);
         motor = hardwareMap.get(DcMotorEx.class, "linearSlide1");
         motor1 = hardwareMap.get(DcMotorEx.class, "linearSlide2");
-        motorsToTest.add(motor);
+        //motorsToTest.add(motor);
         motorsToTest.add(motor1);
 
         motorPower = 0;
@@ -40,6 +41,9 @@ public class EpicMotorTest extends LinearOpMode {
         currentTestMode = TestMode.POWER;
 
         telemetry.addLine("Initialized.");
+        for (int i = 0; i < motorsToTest.size(); i++) {
+            telemetry.addData("Motor " + i + " PIDF Coeffs: ", motor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION));
+        }
         telemetry.update();
 
         waitForStart();
@@ -52,13 +56,13 @@ public class EpicMotorTest extends LinearOpMode {
                     currentTestMode = TestMode.POSITION;
                     for (DcMotorEx motor : motorsToTest) {
                         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        motor.setPower(1);
-                        motorTargetPosition = 0;
+                        motor.setPower(0.5);
+                        motorTargetPosition = minTicks;
                     }
                 } else {
                     currentTestMode = TestMode.POWER;
                     for (DcMotorEx motor : motorsToTest) {
-                        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                         motorPower = 0;
                     }
                 }
@@ -81,10 +85,10 @@ public class EpicMotorTest extends LinearOpMode {
                 }
             } else {
                 if (smartGamepad.dpad_up) {
-                    motorTargetPosition = Math.max(motorTargetPosition - 1, minTicks);
+                    motorTargetPosition = Math.min(motorTargetPosition + 2, maxTicks);
                 }
                 if (smartGamepad.dpad_down) {
-                    motorTargetPosition--;
+                    motorTargetPosition = Math.max(motorTargetPosition - 2, minTicks);
                 }
                 if (smartGamepad.a_pressed) {
                     motorTargetPosition = 0;

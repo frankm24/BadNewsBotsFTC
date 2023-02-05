@@ -15,11 +15,12 @@ import org.openftc.easyopencv.OpenCvPipeline;
 import java.util.Arrays;
 
 import badnewsbots.hardware.GamepadEx;
+import badnewsbots.hardware.RotatingClaw;
 import badnewsbots.pipelines.SignalSleevePipeline;
 import badnewsbots.robots.PowerPlayCompBot;
 
 @Autonomous
-public class PowerPlayAutoRed2 extends LinearOpMode {
+public class AutoRed2ParkingOnly extends LinearOpMode {
 
     private PowerPlayCompBot robot;
     private GamepadEx smartGamepad;
@@ -27,38 +28,29 @@ public class PowerPlayAutoRed2 extends LinearOpMode {
     private SignalSleevePipeline.ConeOrientation coneOrientation;
     private double[] colorFilterAverages;
     private PowerPlayCompBotMecanumDrive drive;
+    private RotatingClaw claw;
 
+    private final double tileSize = 23.5;
     private OpenCvCamera camera;
 
-    private void initOpenCV(OpenCvPipeline pipeline) {
-        camera.setPipeline(pipeline);
-        camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED);
-        camera.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
-        //camera.showFpsMeterOnViewport(true);
-        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
-            @Override
-            public void onOpened() {
-                ftcDashboard.getTelemetry().addLine("Camera stream initialized");
-                telemetry.update();
-                camera.startStreaming(640, 480);
-                ftcDashboard.startCameraStream(camera, 30);
-            }
-            @Override
-            public void onError(int errorCode) {
-                throw new OpenCvCameraException("Could not open camera device. Error code: " + errorCode) ;
-            }
-        });
-    }
+    private TrajectorySequence redAutoParking2_1;
+    private TrajectorySequence redAutoParking2_2;
+    private TrajectorySequence redAutoParking2_3;
+    private Pose2d redStartPose2;
 
     @Override
     public void runOpMode() {
         robot = new PowerPlayCompBot(this);
-        camera = robot.getCamera();
         drive = robot.getDrive();
+        claw = robot.getRotatingClaw();
+
+        initializeAutonomousTrajectories();
+
+        camera = robot.getCamera();
         smartGamepad = new GamepadEx(gamepad1);
         ftcDashboard = FtcDashboard.getInstance();
 
-        SignalSleevePipeline pipeline = new SignalSleevePipeline();
+        SignalSleevePipeline pipeline = new SignalSleevePipeline(SignalSleevePipeline.CameraOrientation.RIGHT);
         initOpenCV(pipeline);
 
         while (!isStarted() && !isStopRequested()) {
@@ -72,6 +64,8 @@ public class PowerPlayAutoRed2 extends LinearOpMode {
             idle();
         }
 
+        drive.setPoseEstimate(redStartPose2);
+        claw.grip();
         if (coneOrientation == SignalSleevePipeline.ConeOrientation.ONE) {
             drive.followTrajectorySequence(redAutoParking2_1);
         }
@@ -82,25 +76,43 @@ public class PowerPlayAutoRed2 extends LinearOpMode {
             drive.followTrajectorySequence(redAutoParking2_3);
         }
     }
-    float robotLength = 15.0f;
-    float robotWidth = 14.6f;
-    float tileSize = 24.0f;
-    Pose2d redStartPose2 = new Pose2d(1.5 * tileSize, -3 * tileSize + robotWidth/2, Math.toRadians(0));
 
-    TrajectorySequence redAutoParking2_1 = robot.getDrive().trajectorySequenceBuilder(redStartPose2)
-            .setReversed(true)
-            .splineTo(new Vector2d(redStartPose2.getX() - tileSize, redStartPose2.getY() + tileSize + robotLength/2),
-                    Math.toRadians(90))
-            .setReversed(false)
-            .build();
+    private void initializeAutonomousTrajectories() {
+        redStartPose2 = new Pose2d(1.5 * tileSize, -3 * tileSize + robot.width/2, Math.toRadians(180));
 
-    TrajectorySequence redAutoParking2_2 = robot.getDrive().trajectorySequenceBuilder(redStartPose2)
-            .setReversed(true)
-            .strafeLeft(1 * tileSize + robotWidth/2)
-            .build();
+        redAutoParking2_1 = drive.trajectorySequenceBuilder(redStartPose2)
+                .forward(tileSize)
+                .strafeRight(1.5*tileSize)
+                .build();
 
-    TrajectorySequence redAutoParking2_3 = robot.getDrive().trajectorySequenceBuilder(redStartPose2)
-            .splineTo(new Vector2d(redStartPose2.getX() + tileSize, redStartPose2.getY() + tileSize + robotLength/2),
-                    Math.toRadians(90))
-            .build();
+        redAutoParking2_2 = drive.trajectorySequenceBuilder(redStartPose2)
+                .strafeRight(2*tileSize)
+                .build();
+
+        redAutoParking2_3 = drive.trajectorySequenceBuilder(redStartPose2)
+                .back(tileSize)
+                .strafeRight(1.5*tileSize)
+                .build();
+    }
+
+    private void initOpenCV(OpenCvPipeline pipeline) {
+        camera.setPipeline(pipeline);
+        camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED);
+        camera.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
+        //camera.showFpsMeterOnViewport(true);
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
+            @Override
+            public void onOpened() {
+                //ftcDashboard.getTelemetry().addLine("Camera stream initialized");
+                telemetry.update();
+                camera.startStreaming(640, 480);
+                //ftcDashboard.startCameraStream(camera, 30);
+            }
+            @Override
+            public void onError(int errorCode) {
+                throw new OpenCvCameraException("Could not open camera device. Error code: " + errorCode) ;
+            }
+        });
+    }
 }
+

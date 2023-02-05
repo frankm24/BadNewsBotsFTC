@@ -5,6 +5,7 @@ import android.os.Environment;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -25,6 +26,7 @@ import java.util.ListIterator;
 import badnewsbots.hardware.GamepadEx;
 import badnewsbots.robots.RingBot;
 
+@Disabled
 @TeleOp
 public class RingBotControl extends LinearOpMode {
     // Robot object

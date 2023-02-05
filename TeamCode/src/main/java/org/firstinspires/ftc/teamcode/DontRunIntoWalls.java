@@ -5,6 +5,7 @@ import android.os.Environment;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -31,6 +32,7 @@ import badnewsbots.ml.YOLODarknetObjectDetector;
 import badnewsbots.hardware.GamepadEx;
 import badnewsbots.robots.AutonomousTestingBot;
 
+@Disabled
 @TeleOp
 public class DontRunIntoWalls extends LinearOpMode {
     // Robot object

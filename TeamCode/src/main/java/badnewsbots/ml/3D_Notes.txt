@@ -1,0 +1,27 @@
+Frank Murphy
+1/20/23
+I am trying to figure out how to get 3D predictions from a single camera and single frame. I saw a youtube video by another
+FTC team on the topic and I'm going to try and impelement it, but it looks confusing.
+
+I think the key principles are that it involves taking key points in the image that you know map to a certain point in 3D space and
+using that relationship to predict 3D position of an object from it's bounding box prediction in image space.
+
+I need a function that does the following conversion:
+Bounding box corners (Image space) as array of 4 points(int x, int y) -> 3d space coords of object (float(x, y, z)) -> field space coords (z axis
+prediction not used)
+
+I got a member of the FTC team Newton Busters to link me to a stackoverflow post explaining their team's apporach for turning
+image space predicitons into 3D predictions. I will first write down the steps here and then figure out what they actually mean.
+
+Figure out camera matrix and distortion coefficents. - IDK How to do this.....
+Detect 4 key points in image where you know the pixel and corresponding points in 3D space.
+Use solvePNP in OpenCV with those 4 points to get rotation and translation vectors.
+Use Rodrigues to transform rotation vector into rotation matrix, concatenate the rotation matrix with the translation vector to get
+the "extrinsic matrix".
+Multiply extrinsic matrix and camera matrix (from step 1) to get the projection matrix.
+Z coord = 0, take off 3rd column which gives homography matrix for converting 2D points to 3D vector space points.
+Find the inverse of homography matrix which gives the homography between vector space points and image space points.
+Mutiply image points with inverse homography matrix.
+Divide the resulting vector my the scalar w to get x, y, 1 which gives X and Y values of the world coordinates.
+
+I'll try to implement the code now and figure out what it's actually doing later.
