@@ -18,21 +18,17 @@ import badnewsbots.hardware.RotatingClaw;
 
 public class PowerPlayCompBot {
     // OOP
-    OpMode opMode;
-    HardwareMap hardwareMap;
-    Telemetry telemetry;
+    private OpMode opMode;
+    private HardwareMap hardwareMap;
+    private Telemetry telemetry;
 
-    private PowerPlayCompBotMecanumDrive drive;
-
-    // Sensors
-    private BNO055IMU imu;
-    private OpenCvWebcam camera;
+    public final double length = 15.0;
+    public final double width = 14.6;
+    private final PowerPlayCompBotMecanumDrive drive;
+    private final OpenCvWebcam camera;
 
     // Mechanisms
-    private RotatingClaw rotatingClaw;
-
-    // Other
-    private WebcamName webcamName;
+    private final RotatingClaw rotatingClaw;
 
     public PowerPlayCompBot(OpMode opMode) {
         this.opMode = opMode;
@@ -43,7 +39,8 @@ public class PowerPlayCompBot {
         for (LynxModule module : hardwareMap.getAll( LynxModule.class ) )
             module.setBulkCachingMode( LynxModule.BulkCachingMode.AUTO );
 
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        // Sensors
+        BNO055IMU imu = hardwareMap.get(BNO055IMU.class, "imu");
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
 
@@ -56,10 +53,11 @@ public class PowerPlayCompBot {
         drive = new PowerPlayCompBotMecanumDrive(hardwareMap);
 
         rotatingClaw = new RotatingClaw(hardwareMap, telemetry);
-        webcamName = hardwareMap.get(WebcamName.class, "Webcam 1" );
+        // Other
+        WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
         camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName);
-        telemetry.addLine("Robot object created");
-        telemetry.update();
+        //telemetry.addLine("Robot object created");
+        //telemetry.update();
     }
 
     public PowerPlayCompBotMecanumDrive getDrive() {return drive;}

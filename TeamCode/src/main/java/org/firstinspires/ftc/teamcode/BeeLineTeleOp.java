@@ -1,12 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import badnewsbots.hardware.GamepadEx;
 import badnewsbots.robots.BeeLineChassis;
 
+@Disabled
 @TeleOp
 public class BeeLineTeleOp extends LinearOpMode {
     // Robot object

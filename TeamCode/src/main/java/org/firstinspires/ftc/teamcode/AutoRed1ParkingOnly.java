@@ -15,11 +15,12 @@ import org.openftc.easyopencv.OpenCvPipeline;
 import java.util.Arrays;
 
 import badnewsbots.hardware.GamepadEx;
+import badnewsbots.hardware.RotatingClaw;
 import badnewsbots.pipelines.SignalSleevePipeline;
 import badnewsbots.robots.PowerPlayCompBot;
 
 @Autonomous
-public class PowerPlayAutoRed1 extends LinearOpMode {
+public class AutoRed1ParkingOnly extends LinearOpMode {
 
     private PowerPlayCompBot robot;
     private GamepadEx smartGamepad;
@@ -27,8 +28,72 @@ public class PowerPlayAutoRed1 extends LinearOpMode {
     private SignalSleevePipeline.ConeOrientation coneOrientation;
     private double[] colorFilterAverages;
     private PowerPlayCompBotMecanumDrive drive;
+    private RotatingClaw claw;
 
+    private final double tileSize = 23.5;
     private OpenCvCamera camera;
+
+    private TrajectorySequence redAutoParking1_1;
+    private TrajectorySequence redAutoParking1_2;
+    private TrajectorySequence redAutoParking1_3;
+    private Pose2d redStartPose1;
+
+    @Override
+    public void runOpMode() {
+        robot = new PowerPlayCompBot(this);
+        drive = robot.getDrive();
+        claw = robot.getRotatingClaw();
+
+        initializeAutonomousTrajectories();
+
+        camera = robot.getCamera();
+        smartGamepad = new GamepadEx(gamepad1);
+        ftcDashboard = FtcDashboard.getInstance();
+
+        SignalSleevePipeline pipeline = new SignalSleevePipeline(SignalSleevePipeline.CameraOrientation.RIGHT);
+        initOpenCV(pipeline);
+
+        while (!isStarted() && !isStopRequested()) {
+            coneOrientation = pipeline.getConeOrientation();
+            colorFilterAverages = pipeline.getFilterAverages();
+            telemetry.addData("Status: ", "Initialized");
+            telemetry.addData("Cone filter averages: (G, M, O)", Arrays.toString(colorFilterAverages));
+            telemetry.addData("Cone orientation: ", coneOrientation);
+            telemetry.addData("FPS: ", camera.getFps());
+            telemetry.update();
+            idle();
+        }
+
+        drive.setPoseEstimate(redStartPose1);
+        claw.grip();
+        if (coneOrientation == SignalSleevePipeline.ConeOrientation.ONE) {
+            drive.followTrajectorySequence(redAutoParking1_1);
+        }
+        if (coneOrientation == SignalSleevePipeline.ConeOrientation.TWO) {
+            drive.followTrajectorySequence(redAutoParking1_2);
+        }
+        if (coneOrientation == SignalSleevePipeline.ConeOrientation.THREE) {
+            drive.followTrajectorySequence(redAutoParking1_3);
+        }
+    }
+
+    private void initializeAutonomousTrajectories() {
+        redStartPose1 = new Pose2d(-1.5 * tileSize, -3 * tileSize + robot.width/2, Math.toRadians(180));
+
+        redAutoParking1_1 = drive.trajectorySequenceBuilder(redStartPose1)
+                .forward(tileSize)
+                .strafeRight(1.5*tileSize)
+                .build();
+
+        redAutoParking1_2 = drive.trajectorySequenceBuilder(redStartPose1)
+                .strafeRight(2*tileSize)
+                .build();
+
+        redAutoParking1_3 = drive.trajectorySequenceBuilder(redStartPose1)
+                .back(tileSize)
+                .strafeRight(1.5*tileSize)
+                .build();
+    }
 
     private void initOpenCV(OpenCvPipeline pipeline) {
         camera.setPipeline(pipeline);
@@ -49,58 +114,4 @@ public class PowerPlayAutoRed1 extends LinearOpMode {
             }
         });
     }
-
-    @Override
-    public void runOpMode() {
-        robot = new PowerPlayCompBot(this);
-        drive = robot.getDrive();
-        camera = robot.getCamera();
-        smartGamepad = new GamepadEx(gamepad1);
-        ftcDashboard = FtcDashboard.getInstance();
-
-        SignalSleevePipeline pipeline = new SignalSleevePipeline();
-        initOpenCV(pipeline);
-
-        while (!isStarted() && !isStopRequested()) {
-            coneOrientation = pipeline.getConeOrientation();
-            colorFilterAverages = pipeline.getFilterAverages();
-            telemetry.addData("Status: ", "Initialized");
-            telemetry.addData("Cone filter averages: (G, M, O)", Arrays.toString(colorFilterAverages));
-            telemetry.addData("Cone orientation: ", coneOrientation);
-            telemetry.addData("FPS: ", camera.getFps());
-            telemetry.update();
-            idle();
-        }
-
-        if (coneOrientation == SignalSleevePipeline.ConeOrientation.ONE) {
-            drive.followTrajectorySequence(redAutoParking1_1);
-        }
-        if (coneOrientation == SignalSleevePipeline.ConeOrientation.TWO) {
-            drive.followTrajectorySequence(redAutoParking1_2);
-        }
-        if (coneOrientation == SignalSleevePipeline.ConeOrientation.THREE) {
-            drive.followTrajectorySequence(redAutoParking1_3);
-        }
-    }
-    float robotLength = 15.0f;
-    float robotWidth = 14.6f;
-    float tileSize = 24.0f;
-    Pose2d redStartPose1 = new Pose2d(-1.5 * tileSize, -3 * tileSize + robotWidth/2, Math.toRadians(0));
-
-    TrajectorySequence redAutoParking1_1 = robot.getDrive().trajectorySequenceBuilder(redStartPose1)
-            .setReversed(true)
-            .splineTo(new Vector2d(redStartPose1.getX() - tileSize, redStartPose1.getY() + tileSize + robotLength/2),
-                    Math.toRadians(90))
-            .setReversed(false)
-            .build();
-
-    TrajectorySequence redAutoParking1_2 = robot.getDrive().trajectorySequenceBuilder(redStartPose1)
-            .setReversed(true)
-            .strafeLeft(1 * tileSize + robotWidth/2)
-            .build();
-
-    TrajectorySequence redAutoParking1_3 = robot.getDrive().trajectorySequenceBuilder(redStartPose1)
-            .splineTo(new Vector2d(redStartPose1.getX() + tileSize, redStartPose1.getY() + tileSize + robotLength/2),
-                    Math.toRadians(90))
-            .build();
 }

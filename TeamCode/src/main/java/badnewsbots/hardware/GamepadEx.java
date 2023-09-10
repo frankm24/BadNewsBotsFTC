@@ -151,7 +151,7 @@ public class GamepadEx {
         a_pressed = !a_prev && a;
         b_pressed = !b_prev && b;
         x_pressed = !x_prev && x;
-        y_pressed = !a_prev && y;
+        y_pressed = !y_prev && y;
         dpad_right_pressed = !dpad_right_prev && dpad_right;
         dpad_up_pressed = !dpad_up_prev && dpad_up;
         dpad_left_pressed = !dpad_left_prev && dpad_left;

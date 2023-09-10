@@ -10,7 +10,7 @@ import java.util.ListIterator;
 
 import badnewsbots.hardware.GamepadEx;
 
-@TeleOp
+@TeleOp(group = "Testing")
 public class EpicServoTest extends LinearOpMode {
     private Servo servo;
     private Servo servo1;
