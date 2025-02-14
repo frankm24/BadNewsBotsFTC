@@ -318,15 +318,15 @@ public class SampleMecanumDrive extends MecanumDrive {
         return new ProfileAccelerationConstraint(maxAccel);
     }
     
-    public void setDriveMotorPowerControllerVector(double LeftStickX, double LeftStickY, double RightStickX, double speedMultiplier) {
-        LeftStickX *= speedMultiplier;
-        LeftStickY *= speedMultiplier;
-        RightStickX *= speedMultiplier;
-        double denominator = Math.max(Math.abs(LeftStickY) + Math.abs(LeftStickX) + Math.abs(RightStickX), 1);
-        double front_leftPower = (LeftStickY + LeftStickX + RightStickX) / denominator;
-        double back_leftPower = (LeftStickY - LeftStickX + RightStickX) / denominator;
-        double front_rightPower = (LeftStickY - LeftStickX - RightStickX) / denominator;
-        double back_rightPower = (LeftStickY + LeftStickX - RightStickX) / denominator;
+    public void setDriveMotorPowerControllerVector(double leftStickX, double leftStickY, double rightStickX, double speedMultiplier) {
+        leftStickX *= speedMultiplier;
+        leftStickY *= speedMultiplier;
+        rightStickX *= speedMultiplier;
+        double denominator = Math.max(Math.abs(leftStickY) + Math.abs(leftStickX) + Math.abs(rightStickX), 1);
+        double front_leftPower = (leftStickY + leftStickX + rightStickX) / denominator;
+        double back_leftPower = (leftStickY - leftStickX + rightStickX) / denominator;
+        double front_rightPower = (leftStickY - leftStickX - rightStickX) / denominator;
+        double back_rightPower = (leftStickY + leftStickX - rightStickX) / denominator;
         leftFront.setPower(front_leftPower);
         leftRear.setPower(back_leftPower);
         rightFront.setPower(front_rightPower);
